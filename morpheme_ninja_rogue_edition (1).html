@@ -1,0 +1,2121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Morpheme Ninja: Rogue Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0220;
+      --panel: #14062e;
+      --panel-2: #1d0a42;
+      --line: #4a1d8f;
+      --pink: #ff2e97;
+      --pink-dark: #b8176a;
+      --cyan: #00e5ff;
+      --yellow: #ffe14a;
+      --orange: #ff9e4a;
+      --green: #2bffb0;
+      --purple: #b56bff;
+      --white: #f6eeff;
+      --muted: #a898d4;
+      --font-pixel: 'Press Start 2P', 'Courier New', monospace;
+      --font-ui: 'Fredoka', 'Nunito', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--white); font-family: var(--font-ui); }
+
+    .dojo-shell { display: flex; flex-direction: column; width: 100%; height: 100%; max-width: 1240px; margin: 0 auto; padding: 8px 10px 10px; gap: 7px; position: relative; }
+
+    /* ---------- HUD ---------- */
+    .dojo-hud {
+      background: var(--panel); border: 2px solid var(--line); border-radius: 14px; padding: 7px 11px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; z-index: 15;
+      box-shadow: 0 0 20px rgba(138, 75, 255, 0.35), inset 0 0 14px rgba(255, 46, 151, 0.12);
+    }
+    .hud-group { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+
+    .dojo-select {
+      min-height: 40px; background: #0d0420; color: var(--cyan); border: 2px solid var(--cyan); border-radius: 10px; padding: 0 10px;
+      font-family: var(--font-ui); font-size: 0.92rem; font-weight: 700; cursor: pointer; box-shadow: 0 0 12px rgba(0, 229, 255, 0.35);
+    }
+    .dojo-select option { background: #14062e; color: var(--white); }
+
+    .hud-pill {
+      background: #0d0420; border: 2px solid var(--line); border-radius: 10px; padding: 7px 10px;
+      font-family: var(--font-pixel); font-size: 0.56rem; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+    }
+    .pill-floor { border-color: var(--purple); color: var(--purple); text-shadow: 0 0 8px rgba(181, 107, 255, 0.8); }
+    .pill-lives { border-color: var(--pink); color: var(--pink); }
+    .pill-shield { border-color: var(--cyan); color: var(--cyan); text-shadow: 0 0 8px rgba(0, 229, 255, 0.8); }
+
+    .relic-tray { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .relic-badge {
+      background: #1b093d; border: 2px solid var(--yellow); border-radius: 8px; padding: 4px 7px;
+      font-size: 0.85rem; cursor: help; box-shadow: 0 0 10px rgba(255, 225, 74, 0.35);
+    }
+
+    .btn-dojo {
+      background: var(--panel-2); color: var(--white); border: 2px solid var(--line); border-radius: 10px; min-height: 40px; padding: 5px 11px;
+      font-family: var(--font-ui); font-size: 0.92rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      transition: transform 0.1s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .btn-dojo:hover { border-color: var(--pink); box-shadow: 0 0 14px rgba(255, 46, 151, 0.55); }
+    .btn-dojo:active { transform: translateY(2px); }
+    .btn-jade { background: rgba(43, 255, 176, 0.14); border-color: var(--green); color: var(--green); box-shadow: 0 0 14px rgba(43, 255, 176, 0.35); }
+    .btn-gold { background: rgba(255, 225, 74, 0.14); border-color: var(--yellow); color: var(--yellow); box-shadow: 0 0 14px rgba(255, 225, 74, 0.3); }
+    .btn-pink { background: var(--pink); border-color: var(--pink); color: #fff; box-shadow: 0 0 20px rgba(255, 46, 151, 0.7); }
+    .btn-off { opacity: 0.55; }
+
+    /* ---------- SENSEI STRIP ---------- */
+    .sensei-strip {
+      background: linear-gradient(90deg, rgba(20, 6, 46, 0.96), rgba(46, 12, 96, 0.96), rgba(20, 6, 46, 0.96));
+      border: 2px solid rgba(255, 46, 151, 0.55); border-radius: 12px; padding: 7px 13px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 1rem; font-weight: 600; z-index: 15;
+    }
+    .sensei-prompt { color: var(--white); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wave-tag {
+      padding: 4px 9px; border-radius: 7px; font-family: var(--font-pixel); font-size: 0.5rem;
+      background: #0d0420; border: 2px solid var(--cyan); color: var(--cyan); flex-shrink: 0;
+    }
+    .wave-tag.boss { border-color: var(--pink); color: var(--pink); box-shadow: 0 0 10px rgba(255, 46, 151, 0.6); }
+    .wave-tag.blitz { border-color: var(--yellow); color: var(--yellow); box-shadow: 0 0 10px rgba(255, 225, 74, 0.6); }
+    .wave-tag.target { border-color: var(--green); color: var(--green); }
+
+    /* ---------- PROGRESS BAR ---------- */
+    .progress-strip {
+      display: grid; grid-template-columns: 1.15fr 1fr 1.25fr; gap: 12px; z-index: 15;
+      background: var(--panel); border: 2px solid var(--line); border-radius: 12px; padding: 7px 12px;
+    }
+    @media (max-width: 720px) { .progress-strip { grid-template-columns: 1fr 1fr; } .pb-block:last-child { grid-column: 1 / -1; } }
+    .pb-label { display: flex; justify-content: space-between; gap: 6px; font-family: var(--font-pixel); font-size: 0.48rem; color: var(--muted); margin-bottom: 5px; }
+    .pb-label span:last-child { color: var(--white); }
+    .pb-track { height: 12px; background: #0d0420; border: 2px solid var(--line); border-radius: 999px; overflow: hidden; }
+    .pb-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--green)); box-shadow: 0 0 12px rgba(0, 229, 255, 0.7); transition: width 0.35s ease; }
+    .pb-fill.hi { background: linear-gradient(90deg, var(--pink), var(--orange)); box-shadow: 0 0 12px rgba(255, 46, 151, 0.7); }
+    .pb-fill.hi.new { background: linear-gradient(90deg, var(--yellow), var(--orange), var(--pink)); animation: pulseGlow 0.7s ease-in-out infinite alternate; }
+    @keyframes pulseGlow { from { filter: brightness(1); } to { filter: brightness(1.6); } }
+    .pb-segs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; height: 12px; }
+    .pb-segs i { background: #0d0420; border: 2px solid var(--line); border-radius: 4px; transition: all 0.25s; }
+    .pb-segs i.on { background: var(--pink); border-color: var(--pink); box-shadow: 0 0 10px rgba(255, 46, 151, 0.8); }
+    .pb-segs.max i.on { background: var(--yellow); border-color: var(--yellow); box-shadow: 0 0 12px rgba(255, 225, 74, 0.9); }
+
+    /* ---------- ARENA ---------- */
+    .dojo-arena {
+      position: relative; flex: 1; width: 100%; min-height: 270px; border-radius: 18px; overflow: hidden;
+      border: 3px solid var(--pink); background: var(--bg);
+      box-shadow: 0 0 30px rgba(255, 46, 151, 0.5), 0 0 60px rgba(0, 229, 255, 0.2), inset 0 0 40px rgba(0, 0, 0, 0.6);
+    }
+    canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+    .scanlines { position: absolute; inset: 0; pointer-events: none; z-index: 5; background: repeating-linear-gradient(180deg, rgba(0,0,0,0) 0 2px, rgba(0,0,0,0.12) 2px 3px); mix-blend-mode: multiply; }
+
+    /* ---------- DEFINITION OVERLAY ---------- */
+    .definition-overlay {
+      position: absolute; inset: 0; background: rgba(8, 2, 22, 0.87); backdrop-filter: blur(4px);
+      display: none; flex-direction: column; align-items: center; justify-content: center; padding: 14px; z-index: 25; animation: fadeInFast 0.16s ease; overflow-y: auto;
+    }
+    @keyframes fadeInFast { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+
+    .def-card {
+      background: var(--panel); border: 3px solid var(--pink); border-radius: 20px; max-width: 700px; width: 100%; padding: 18px;
+      box-shadow: 0 0 40px rgba(255, 46, 151, 0.5), inset 0 0 20px rgba(138, 75, 255, 0.2);
+      display: flex; flex-direction: column; gap: 13px; text-align: center;
+    }
+    .sliced-parts-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .morpheme-slab {
+      background: #0d0420; color: var(--white); border: 3px solid var(--line); border-radius: 14px; padding: 8px 15px; min-width: 108px; transition: all 0.2s ease;
+    }
+    .morpheme-slab.active-part { border-color: var(--cyan); box-shadow: 0 0 20px rgba(0, 229, 255, 0.7); transform: translateY(-3px) scale(1.05); }
+    .morpheme-slab.solved-part { border-color: var(--green); box-shadow: 0 0 14px rgba(43, 255, 176, 0.5); }
+    .slab-role { font-family: var(--font-pixel); font-size: 0.48rem; color: var(--muted); text-transform: uppercase; }
+    .slab-text { font-family: var(--font-ui); font-size: 1.6rem; font-weight: 700; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 229, 255, 0.8); margin: 4px 0; }
+    .slab-meaning { font-size: 0.92rem; font-weight: 600; color: var(--green); min-height: 20px; }
+    .plus-sign { font-family: var(--font-pixel); font-size: 1rem; color: var(--yellow); }
+
+    .def-question-banner { background: #0d0420; border: 2px solid var(--line); border-radius: 12px; padding: 11px 14px; font-size: 1.2rem; font-weight: 600; color: var(--white); }
+    .def-question-banner span { color: var(--pink); font-weight: 700; text-shadow: 0 0 10px rgba(255, 46, 151, 0.8); }
+
+    .def-choices-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    @media (max-width: 540px) { .def-choices-grid { grid-template-columns: 1fr; } }
+    .choice-btn {
+      background: var(--panel-2); color: var(--white); border: 3px solid var(--line); border-radius: 14px; min-height: 54px; padding: 10px 14px;
+      font-family: var(--font-ui); font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: transform 0.08s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+    }
+    .choice-btn:hover:not(:disabled) { border-color: var(--cyan); box-shadow: 0 0 16px rgba(0, 229, 255, 0.55); }
+    .choice-btn:active:not(:disabled) { transform: translateY(2px); }
+    .choice-btn.correct { background: rgba(43, 255, 176, 0.2); border-color: var(--green); color: var(--green); box-shadow: 0 0 18px rgba(43, 255, 176, 0.6); }
+    .choice-btn.wrong { background: rgba(255, 46, 151, 0.2); border-color: var(--pink); color: #ff9fcb; animation: shakeBtn 0.28s ease; }
+    @keyframes shakeBtn { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+    /* ---------- MODALS & RELIC DRAFT ---------- */
+    .dojo-modal { position: fixed; inset: 0; background: rgba(5, 1, 14, 0.92); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 60; }
+    .modal-card {
+      background: var(--panel); border: 3px solid var(--pink); border-radius: 22px; max-width: 740px; width: 100%; max-height: 92vh; overflow-y: auto; padding: 22px 20px;
+      box-shadow: 0 0 50px rgba(255, 46, 151, 0.55), 0 0 100px rgba(0, 229, 255, 0.18); display: flex; flex-direction: column; gap: 15px; text-align: center;
+    }
+    .modal-sub { font-family: var(--font-pixel); font-size: 0.58rem; color: var(--cyan); letter-spacing: 1px; text-shadow: 0 0 8px rgba(0, 229, 255, 0.8); }
+    .modal-title {
+      font-family: var(--font-pixel); font-size: clamp(1.25rem, 5vw, 2.2rem); line-height: 1.25; letter-spacing: 2px;
+      background: linear-gradient(180deg, var(--yellow) 0%, var(--orange) 40%, var(--pink) 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+      filter: drop-shadow(0 0 10px rgba(255, 46, 151, 0.8));
+    }
+    .steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; text-align: left; }
+    @media (max-width: 640px) { .steps-grid { grid-template-columns: 1fr; } }
+    .step-box { background: #0d0420; border: 2px solid var(--line); border-radius: 14px; padding: 12px; font-size: 0.95rem; line-height: 1.4; font-weight: 500; }
+
+    .relic-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 640px) { .relic-grid { grid-template-columns: 1fr; } }
+    .relic-card {
+      background: #0d0420; border: 3px solid var(--cyan); border-radius: 16px; padding: 14px 12px; cursor: pointer; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 8px; transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+    }
+    .relic-card:hover { transform: translateY(-4px); border-color: var(--yellow); box-shadow: 0 0 24px rgba(255, 225, 74, 0.55); }
+    .relic-icon { font-size: 2rem; }
+    .relic-name { font-family: var(--font-pixel); font-size: 0.62rem; color: var(--yellow); line-height: 1.35; }
+    .relic-desc { font-size: 0.92rem; color: var(--white); line-height: 1.35; }
+
+    .blink { animation: blink 1s steps(2, start) infinite; }
+    @keyframes blink { to { opacity: 0.35; } }
+
+    .scroll-bank { display: flex; flex-wrap: wrap; gap: 8px; max-height: 260px; overflow-y: auto; padding: 12px; background: #0d0420; border: 2px solid var(--line); border-radius: 14px; }
+    .scroll-chip { background: var(--panel-2); border: 2px solid var(--cyan); border-radius: 10px; padding: 8px 12px; text-align: left; box-shadow: 0 0 10px rgba(0, 229, 255, 0.3); }
+    .scroll-chip .w { color: var(--pink); font-weight: 700; font-size: 1.05rem; }
+    .scroll-chip .b { color: var(--muted); font-size: 0.85rem; }
+    .scroll-chip .m { color: var(--green); font-size: 0.9rem; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+  <div class="dojo-shell">
+    <!-- HUD -->
+    <div class="dojo-hud">
+      <div class="hud-group">
+        <select id="curriculumSetSelect" class="dojo-select" onchange="changeSet()" title="Choose starting difficulty">
+          <option value="set1">TIER 1 • Auto-Scales</option>
+          <option value="set2">TIER 2 • Intermediate</option>
+          <option value="set3">TIER 3 • Greek/Latin</option>
+          <option value="all">ALL 78 WORDS</option>
+        </select>
+        <div class="hud-pill pill-floor" id="hudFloor">FLOOR 1</div>
+        <div class="hud-pill pill-lives" id="hudLives">❤❤❤</div>
+        <div class="hud-pill pill-shield" id="hudShield" style="display:none;">🛡️ 0</div>
+        <div class="relic-tray" id="relicTray"></div>
+      </div>
+
+      <div class="hud-group">
+        <button class="btn-dojo btn-gold" onclick="openScrollModal()">📜 Book (<span id="masteredCount">0</span>)</button>
+        <button class="btn-dojo" id="musicBtn" onclick="toggleMusic()">🎵 Music</button>
+        <button class="btn-dojo" id="audioBtn" onclick="toggleAudio()">🔊 SFX</button>
+        <button class="btn-dojo" onclick="openIntroModal()">?</button>
+      </div>
+    </div>
+
+    <!-- SENSEI STRIP -->
+    <div class="sensei-strip">
+      <div class="sensei-prompt" id="senseiBanner">Slice true morpheme seams! Watch out for disguised traps.</div>
+      <div class="wave-tag" id="waveTag">FLOOR 1 • 1/5</div>
+    </div>
+
+    <!-- PROGRESS BAR -->
+    <div class="progress-strip">
+      <div class="pb-block">
+        <div class="pb-label"><span>FLOOR PROGRESS</span><span id="pbFloorProgress">0 / 5</span></div>
+        <div class="pb-track"><div class="pb-fill" id="pbFloorFill"></div></div>
+      </div>
+      <div class="pb-block">
+        <div class="pb-label"><span>NINJA FLOW</span><span id="pbPowerLabel">WARM UP</span></div>
+        <div class="pb-segs" id="pbSegs"><i></i><i></i><i></i><i></i><i></i></div>
+      </div>
+      <div class="pb-block">
+        <div class="pb-label"><span id="pbScore">SCORE 0 • HI 0</span><span id="pbBestFloor">BEST FL 1</span></div>
+        <div class="pb-track"><div class="pb-fill hi" id="pbHiFill"></div></div>
+      </div>
+    </div>
+
+    <!-- ARENA -->
+    <div class="dojo-arena" id="dojoArena">
+      <canvas id="gameCanvas"></canvas>
+      <div class="scanlines"></div>
+
+      <!-- MORPHEME DEFINITION OVERLAY -->
+      <div class="definition-overlay" id="definitionOverlay">
+        <div class="def-card">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+            <span style="font-family:var(--font-pixel); font-size:0.55rem; color:var(--yellow);" id="defStepTitle">STEP 2 OF 3</span>
+            <span style="font-family:var(--font-pixel); font-size:0.55rem; color:var(--cyan);" id="sliceAccuracyBadge">CLEAN CUT!</span>
+          </div>
+          <div class="sliced-parts-row" id="slicedPartsRow"></div>
+          <div class="def-question-banner" id="defQuestionPrompt">What does the prefix <span>un-</span> mean?</div>
+          <div class="def-choices-grid" id="defChoicesGrid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTRO MODAL -->
+  <div class="dojo-modal" id="introModal">
+    <div class="modal-card">
+      <div>
+        <div class="modal-sub">★ ROGUELIKE MORPHOLOGY ACTION ★</div>
+        <div class="modal-title" style="margin-top:8px;">MORPHEME NINJA<br>ROGUE EDITION</div>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-box">
+          <strong style="color:var(--cyan);">1. Judge &amp; Slice</strong><br>
+          Slice real morpheme seams! <b style="color:var(--pink);">Disguised Traps</b> (like <em>uncle</em>, <em>elephant</em>, <em>unjump</em>, or <em>teleskope</em>) look like word signs—let them fall!
+        </div>
+        <div class="step-box">
+          <strong style="color:var(--yellow);">2. Survive &amp; Draft</strong><br>
+          Clear 5 encounters per floor to draft powerful <b>Ninja Relics</b>. Every 3rd floor spawns an armored <b>Double-Cut Boss Word</b>!
+        </div>
+        <div class="step-box">
+          <strong style="color:var(--green);">3. Roguelike Stakes</strong><br>
+          Lose all HP and your run resets to Floor 1—while your <b>Word Book</b> and <b>Best Floor</b> persist forever.
+        </div>
+      </div>
+
+      <button class="btn-dojo btn-pink blink" style="min-height:56px; font-family:var(--font-pixel); font-size:0.78rem; width:100%;" onclick="startDojoSession()">
+        ▶ START ROGUE RUN
+      </button>
+    </div>
+  </div>
+
+  <!-- RELIC DRAFT MODAL -->
+  <div class="dojo-modal" id="relicModal" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-sub" id="relicModalSub">FLOOR 1 CLEARED!</div>
+      <div class="modal-title" style="font-size:1.35rem;">CHOOSE A RELIC</div>
+      <div class="relic-grid" id="relicDraftGrid"></div>
+      <button class="btn-dojo btn-jade" style="width:100%; min-height:48px;" onclick="chooseMeditate()">
+        🧘 Meditate Instead (+1 ❤ HP &amp; +1 🛡️ Shield)
+      </button>
+    </div>
+  </div>
+
+  <!-- WORD BOOK MODAL -->
+  <div class="dojo-modal" id="scrollModal" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-sub">PERMANENT CODEX</div>
+      <div class="modal-title" style="font-size:1.25rem;">MASTERED WORD BOOK</div>
+      <div class="scroll-bank" id="scrollBankGrid"></div>
+      <button class="btn-dojo btn-gold" style="width:100%; min-height:48px;" onclick="document.getElementById('scrollModal').style.display='none'">Back to Dojo</button>
+    </div>
+  </div>
+
+  <!-- PERMADEATH GAME OVER MODAL -->
+  <div class="dojo-modal" id="gameOverModal" style="display:none;">
+    <div class="modal-card" style="max-width:540px;">
+      <div class="modal-sub">RUN ENDED • PERMADEATH</div>
+      <div class="modal-title" id="gameOverTitle" style="font-size:1.35rem;">DEFEATED!</div>
+      <p style="font-size:1.05rem; line-height:1.55; font-weight:500;" id="gameOverStats"></p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn-dojo btn-pink" style="flex:1; min-height:52px;" onclick="restartDojo()">▶ New Run (Floor 1)</button>
+        <button class="btn-dojo btn-gold" style="flex:1; min-height:52px;" onclick="openScrollModal()">📜 Word Book</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ========================================================================
+       1. 78-WORD MULTI-TIER MORPHOLOGICAL DATABASE & DISGUISED TRAPS
+       ======================================================================== */
+    const WORD_SCROLLS = {
+      set1: [
+        { word: "unhappy", parts: [ { text: "un-", role: "Prefix", meaning: "not" }, { text: "happy", role: "Base Word", meaning: "feeling glad" } ], fullMeaning: "not feeling glad or cheerful", distractorFull: ["full of cheerful joy", "feeling glad again", "before feeling glad"] },
+        { word: "unlock", parts: [ { text: "un-", role: "Prefix", meaning: "not / reverse" }, { text: "lock", role: "Base Word", meaning: "fasten with a key" } ], fullMeaning: "open something that was fastened shut", distractorFull: ["fasten shut again", "locked many times", "without any key"] },
+        { word: "unfair", parts: [ { text: "un-", role: "Prefix", meaning: "not" }, { text: "fair", role: "Base Word", meaning: "equal and just" } ], fullMeaning: "not equal, right, or just", distractorFull: ["being just again", "full of equal rules", "before making a rule"] },
+        { word: "untie", parts: [ { text: "un-", role: "Prefix", meaning: "reverse / undo" }, { text: "tie", role: "Base Word", meaning: "fasten with a knot" } ], fullMeaning: "undo or loosen a knot", distractorFull: ["knot something twice", "before tying a shoe", "unable to make a knot"] },
+        { word: "unpack", parts: [ { text: "un-", role: "Prefix", meaning: "reverse / empty" }, { text: "pack", role: "Base Word", meaning: "fill a bag or box" } ], fullMeaning: "take items out of a bag or box", distractorFull: ["fill a bag again", "before buying a bag", "full of heavy boxes"] },
+        { word: "repaint", parts: [ { text: "re-", role: "Prefix", meaning: "again" }, { text: "paint", role: "Base Word", meaning: "cover with color" } ], fullMeaning: "cover with color one more time", distractorFull: ["remove all color", "before adding color", "someone who paints"] },
+        { word: "replay", parts: [ { text: "re-", role: "Prefix", meaning: "again" }, { text: "play", role: "Base Word", meaning: "run a game or video" } ], fullMeaning: "run a game or video again", distractorFull: ["stop playing forever", "play in the middle", "someone who plays"] },
+        { word: "rebuild", parts: [ { text: "re-", role: "Prefix", meaning: "again" }, { text: "build", role: "Base Word", meaning: "construct or put together" } ], fullMeaning: "construct something again after damage", distractorFull: ["knock a wall down", "before making a plan", "unable to construct"] },
+        { word: "rewrite", parts: [ { text: "re-", role: "Prefix", meaning: "again" }, { text: "write", role: "Base Word", meaning: "put words on paper" } ], fullMeaning: "write words over again to improve them", distractorFull: ["erase every word", "before learning to spell", "without any paper"] },
+        { word: "reuse", parts: [ { text: "re-", role: "Prefix", meaning: "again" }, { text: "use", role: "Base Word", meaning: "put into service" } ], fullMeaning: "put an item into service again instead of trashing it", distractorFull: ["throw away immediately", "before opening a box", "unable to be used"] },
+        { word: "preheat", parts: [ { text: "pre-", role: "Prefix", meaning: "before" }, { text: "heat", role: "Base Word", meaning: "make warm or hot" } ], fullMeaning: "warm up an oven before cooking", distractorFull: ["cool down completely", "warm up a second time", "without any heat"] },
+        { word: "preview", parts: [ { text: "pre-", role: "Prefix", meaning: "before" }, { text: "view", role: "Base Word", meaning: "look at or see" } ], fullMeaning: "see a sneak peek before the full show", distractorFull: ["watch a movie twice", "unable to see the screen", "looking backward"] },
+        { word: "pretest", parts: [ { text: "pre-", role: "Prefix", meaning: "before" }, { text: "test", role: "Base Word", meaning: "check knowledge" } ], fullMeaning: "a practice check given before a unit begins", distractorFull: ["a final exam at the end", "retaking a failed quiz", "without any questions"] },
+        { word: "nonstop", parts: [ { text: "non-", role: "Prefix", meaning: "not / without" }, { text: "stop", role: "Base Word", meaning: "come to a halt" } ], fullMeaning: "continuing without coming to a halt", distractorFull: ["halting before noon", "stopping again", "under a stop sign"] },
+        { word: "midway", parts: [ { text: "mid-", role: "Prefix", meaning: "in the middle" }, { text: "way", role: "Base Word", meaning: "a path or distance" } ], fullMeaning: "in the middle of a path or distance", distractorFull: ["at the very end", "before starting", "without a path"] },
+        { word: "midnight", parts: [ { text: "mid-", role: "Prefix", meaning: "in the middle" }, { text: "night", role: "Base Word", meaning: "dark hours" } ], fullMeaning: "the middle of the night at 12:00 AM", distractorFull: ["bright noon sunshine", "before sunset", "without any stars"] },
+        { word: "teacher", parts: [ { text: "teach", role: "Base Word", meaning: "help others learn" }, { text: "-er", role: "Suffix", meaning: "someone who" } ], fullMeaning: "someone who helps others learn", distractorFull: ["not helping others learn", "learning in the past", "full of lessons"] },
+        { word: "singer", parts: [ { text: "sing", role: "Base Word", meaning: "make music with voice" }, { text: "-er", role: "Suffix", meaning: "someone who" } ], fullMeaning: "someone who makes music with their voice", distractorFull: ["a song played backward", "without any music", "before a concert"] },
+        { word: "painter", parts: [ { text: "paint", role: "Base Word", meaning: "create art with color" }, { text: "-er", role: "Suffix", meaning: "someone who" } ], fullMeaning: "someone who creates art or coats walls with color", distractorFull: ["washing color off", "before buying brushes", "full of bright colors"] },
+        { word: "harmless", parts: [ { text: "harm", role: "Base Word", meaning: "hurt or damage" }, { text: "-less", role: "Suffix", meaning: "without" } ], fullMeaning: "unable to cause hurt or damage", distractorFull: ["full of danger", "causing hurt again", "before any damage"] },
+        { word: "helpless", parts: [ { text: "help", role: "Base Word", meaning: "give aid" }, { text: "-less", role: "Suffix", meaning: "without" } ], fullMeaning: "without the power to aid oneself", distractorFull: ["eager to give aid", "someone who helps", "giving aid twice"] },
+        { word: "joyful", parts: [ { text: "joy", role: "Base Word", meaning: "great happiness" }, { text: "-ful", role: "Suffix", meaning: "full of" } ], fullMeaning: "full of great happiness", distractorFull: ["without any happiness", "not happy at all", "happening in the past"] },
+        { word: "careful", parts: [ { text: "care", role: "Base Word", meaning: "close attention" }, { text: "-ful", role: "Suffix", meaning: "full of" } ], fullMeaning: "full of close attention to avoid mistakes", distractorFull: ["without paying attention", "someone who worries", "forgetting everything"] },
+        { word: "hopeful", parts: [ { text: "hope", role: "Base Word", meaning: "wish for good things" }, { text: "-ful", role: "Suffix", meaning: "full of" } ], fullMeaning: "full of optimism that good things will happen", distractorFull: ["giving up completely", "without any wishes", "happened long ago"] },
+        { word: "jumped", parts: [ { text: "jump", role: "Base Word", meaning: "leap into the air" }, { text: "-ed", role: "Suffix", meaning: "past tense verb" } ], fullMeaning: "leaped into the air in the past", distractorFull: ["someone who leaps", "without leaping", "leaping before noon"] },
+        { word: "walked", parts: [ { text: "walk", role: "Base Word", meaning: "move on foot" }, { text: "-ed", role: "Suffix", meaning: "past tense verb" } ], fullMeaning: "moved on foot in the past", distractorFull: ["unable to move", "someone who walks", "running fast tomorrow"] }
+      ],
+      set2: [
+        { word: "disagree", parts: [ { text: "dis-", role: "Prefix", meaning: "not / opposite" }, { text: "agree", role: "Base Word", meaning: "have the same opinion" } ], fullMeaning: "have a different or opposite opinion", distractorFull: ["have the exact same opinion", "agree again later", "capable of agreeing"] },
+        { word: "dishonest", parts: [ { text: "dis-", role: "Prefix", meaning: "not / opposite" }, { text: "honest", role: "Base Word", meaning: "truthful and fair" } ], fullMeaning: "not truthful; willing to trick or lie", distractorFull: ["telling the truth again", "the most truthful person", "before speaking truthfully"] },
+        { word: "disappear", parts: [ { text: "dis-", role: "Prefix", meaning: "reverse / away" }, { text: "appear", role: "Base Word", meaning: "come into sight" } ], fullMeaning: "vanish or go out of sight completely", distractorFull: ["come into sight again", "before anyone looks", "easy to see clearly"] },
+        { word: "misread", parts: [ { text: "mis-", role: "Prefix", meaning: "wrongly, badly" }, { text: "read", role: "Base Word", meaning: "understand words" } ], fullMeaning: "read or understand words wrongly", distractorFull: ["read before class", "unable to be read", "someone who reads"] },
+        { word: "misspell", parts: [ { text: "mis-", role: "Prefix", meaning: "wrongly, badly" }, { text: "spell", role: "Base Word", meaning: "form words with letters" } ], fullMeaning: "write the letters of a word wrongly", distractorFull: ["check letters again", "before learning letters", "someone who wins bees"] },
+        { word: "submarine", parts: [ { text: "sub-", role: "Prefix", meaning: "under, below" }, { text: "marine", role: "Base Word", meaning: "relating to the sea" } ], fullMeaning: "a vessel that travels under the sea", distractorFull: ["flying high above clouds", "tiny drop of water", "across the desert"] },
+        { word: "subway", parts: [ { text: "sub-", role: "Prefix", meaning: "under, below" }, { text: "way", role: "Base Word", meaning: "travel route" } ], fullMeaning: "an underground train route beneath city streets", distractorFull: ["a bridge high over water", "a forest hiking trail", "walking backward"] },
+        { word: "microscope", parts: [ { text: "micro-", role: "Prefix", meaning: "tiny, small" }, { text: "scope", role: "Root", meaning: "instrument for viewing" } ], fullMeaning: "an instrument for viewing tiny objects", distractorFull: ["viewing distant stars", "viewing underwater", "broken viewing glass"] },
+        { word: "microchip", parts: [ { text: "micro-", role: "Prefix", meaning: "tiny, small" }, { text: "chip", role: "Base Word", meaning: "small piece of silicon" } ], fullMeaning: "a tiny electronic circuit piece inside computers", distractorFull: ["a giant boulder", "a potato snack", "before computers existed"] },
+        { word: "invisible", parts: [ { text: "in-", role: "Prefix", meaning: "not" }, { text: "vis", role: "Latin Root", meaning: "to see" }, { text: "-ible", role: "Suffix", meaning: "capable of being" } ], fullMeaning: "not capable of being seen", distractorFull: ["easy to see from far away", "seen wrongly", "seeing many things"] },
+        { word: "washable", parts: [ { text: "wash", role: "Base Word", meaning: "clean with water" }, { text: "-able", role: "Suffix", meaning: "capable of being" } ], fullMeaning: "capable of being cleaned with water", distractorFull: ["without any water", "cleaned wrongly", "condition of being dirty"] },
+        { word: "readable", parts: [ { text: "read", role: "Base Word", meaning: "understand text" }, { text: "-able", role: "Suffix", meaning: "capable of being" } ], fullMeaning: "clear enough that it can be read easily", distractorFull: ["impossible to understand", "written in secret code", "before printing a book"] },
+        { word: "kindness", parts: [ { text: "kind", role: "Base Word", meaning: "friendly and caring" }, { text: "-ness", role: "Suffix", meaning: "state of being" } ], fullMeaning: "the quality or state of being friendly and caring", distractorFull: ["not friendly at all", "someone who is caring", "before being friendly"] },
+        { word: "darkness", parts: [ { text: "dark", role: "Base Word", meaning: "having little light" }, { text: "-ness", role: "Suffix", meaning: "state of being" } ], fullMeaning: "the state of having little or no light", distractorFull: ["full of bright sunshine", "turning on lamps again", "before the sun sets"] },
+        { word: "semicircle", parts: [ { text: "semi-", role: "Prefix", meaning: "half, partly" }, { text: "circle", role: "Base Word", meaning: "a round shape" } ], fullMeaning: "half of a round shape", distractorFull: ["many round shapes", "against circles", "under a circle"] },
+        { word: "overcook", parts: [ { text: "over-", role: "Prefix", meaning: "too much" }, { text: "cook", role: "Base Word", meaning: "prepare food with heat" } ], fullMeaning: "heat food for too long so it dries or burns", distractorFull: ["serve food raw and cold", "prepare a meal twice", "before turning on the stove"] },
+        { word: "bicycle", parts: [ { text: "bi-", role: "Prefix", meaning: "two" }, { text: "cycle", role: "Root", meaning: "wheel or circle" } ], fullMeaning: "a two-wheeled vehicle powered by pedals", distractorFull: ["a unicycle with one wheel", "a truck with six tires", "before wheels were invented"] },
+        { word: "triangle", parts: [ { text: "tri-", role: "Prefix", meaning: "three" }, { text: "angle", role: "Base Word", meaning: "corner where lines meet" } ], fullMeaning: "a flat shape with three straight sides and angles", distractorFull: ["a box with four corners", "a round ball", "splitting a line in half"] },
+        { word: "previewed", parts: [ { text: "pre-", role: "Prefix", meaning: "before" }, { text: "view", role: "Base Word", meaning: "watch or see" }, { text: "-ed", role: "Suffix", meaning: "past tense" } ], fullMeaning: "watched an early showing in the past", distractorFull: ["refused to watch", "watching again tomorrow", "unable to see"] },
+        { word: "slowly", parts: [ { text: "slow", role: "Base Word", meaning: "moving at low speed" }, { text: "-ly", role: "Suffix", meaning: "in a certain way" } ], fullMeaning: "moving in a way that takes extra time", distractorFull: ["the fastest runner", "without moving at all", "before starting"] },
+        { word: "quickly", parts: [ { text: "quick", role: "Base Word", meaning: "fast" }, { text: "-ly", role: "Suffix", meaning: "in a certain way" } ], fullMeaning: "in a fast and speedy manner", distractorFull: ["taking hours to move", "without any speed", "someone who runs"] },
+        { word: "carefulness", parts: [ { text: "care", role: "Base Word", meaning: "close attention" }, { text: "-ful", role: "Suffix", meaning: "full of" }, { text: "-ness", role: "Suffix", meaning: "state of being" } ], fullMeaning: "the state of being full of close attention", distractorFull: ["acting recklessly", "without any thought", "before paying attention"] },
+        { word: "endless", parts: [ { text: "end", role: "Base Word", meaning: "finish or stop" }, { text: "-less", role: "Suffix", meaning: "without" } ], fullMeaning: "seeming to go on forever without a finish", distractorFull: ["finishing immediately", "full of endings", "before starting"] },
+        { word: "redo", parts: [ { text: "re-", role: "Prefix", meaning: "again" }, { text: "do", role: "Base Word", meaning: "perform an action" } ], fullMeaning: "perform an action or task over again", distractorFull: ["refuse to perform", "before starting a task", "without any effort"] },
+        { word: "underpay", parts: [ { text: "under-", role: "Prefix", meaning: "below / not enough" }, { text: "pay", role: "Base Word", meaning: "give money for work" } ], fullMeaning: "pay someone less money than their work is worth", distractorFull: ["give extra bonus money", "pay twice for the same item", "before doing any work"] },
+        { word: "superhuman", parts: [ { text: "super-", role: "Prefix", meaning: "above / beyond" }, { text: "human", role: "Base Word", meaning: "ordinary person" } ], fullMeaning: "having powers beyond what an ordinary person can do", distractorFull: ["weaker than average", "without any energy", "before people existed"] }
+      ],
+      set3: [
+        { word: "transport", parts: [ { text: "trans-", role: "Prefix", meaning: "across, beyond" }, { text: "port", role: "Latin Root", meaning: "to carry" } ], fullMeaning: "carry goods or people across from one place to another", distractorFull: ["break something apart", "write down a message", "hear from afar"] },
+        { word: "portable", parts: [ { text: "port", role: "Latin Root", meaning: "to carry" }, { text: "-able", role: "Suffix", meaning: "capable of being" } ], fullMeaning: "light enough that it can be carried easily", distractorFull: ["too heavy to move", "bolted to the floor", "before wheels existed"] },
+        { word: "export", parts: [ { text: "ex-", role: "Prefix", meaning: "out, away" }, { text: "port", role: "Latin Root", meaning: "to carry" } ], fullMeaning: "carry or ship goods out of a country", distractorFull: ["bring goods inside a harbor", "hide cargo underground", "before building a ship"] },
+        { word: "telescope", parts: [ { text: "tele-", role: "Greek Root", meaning: "distant, far" }, { text: "scope", role: "Root", meaning: "instrument for viewing" } ], fullMeaning: "an instrument for viewing distant objects in space", distractorFull: ["an instrument for hearing whispers", "writing a long story", "building a tall tower"] },
+        { word: "telephone", parts: [ { text: "tele-", role: "Greek Root", meaning: "distant, far" }, { text: "phone", role: "Greek Root", meaning: "sound, voice" } ], fullMeaning: "a device that carries voice sounds across distances", distractorFull: ["a tool for viewing stars", "a book of silent maps", "speaking only in whispers"] },
+        { word: "construct", parts: [ { text: "con-", role: "Prefix", meaning: "together, with" }, { text: "struct", role: "Latin Root", meaning: "to build" } ], fullMeaning: "build or put parts together", distractorFull: ["tear down and break", "drag behind", "speak loudly"] },
+        { word: "instruction", parts: [ { text: "in-", role: "Prefix", meaning: "into" }, { text: "struct", role: "Latin Root", meaning: "to build" }, { text: "-ion", role: "Suffix", meaning: "act or process" } ], fullMeaning: "the act of building knowledge or giving directions", distractorFull: ["tearing down a wall", "ignoring every rule", "without any guidance"] },
+        { word: "predict", parts: [ { text: "pre-", role: "Prefix", meaning: "before" }, { text: "dict", role: "Latin Root", meaning: "say" } ], fullMeaning: "say what will happen before it occurs", distractorFull: ["write after an event", "carry back", "break suddenly"] },
+        { word: "dictate", parts: [ { text: "dict", role: "Latin Root", meaning: "say" }, { text: "-ate", role: "Suffix", meaning: "to do or make" } ], fullMeaning: "speak words aloud for someone else to write", distractorFull: ["listen in silence", "erase written notes", "before learning words"] },
+        { word: "disrupt", parts: [ { text: "dis-", role: "Prefix", meaning: "apart, opposite" }, { text: "rupt", role: "Latin Root", meaning: "to break, burst" } ], fullMeaning: "break apart or interrupt normal order", distractorFull: ["build together carefully", "see clearly", "carry across"] },
+        { word: "rupture", parts: [ { text: "rupt", role: "Latin Root", meaning: "to break, burst" }, { text: "-ure", role: "Suffix", meaning: "act or result of" } ], fullMeaning: "the act or result of bursting or breaking open", distractorFull: ["sealing a pipe tightly", "building a bridge", "speaking softly"] },
+        { word: "auditorium", parts: [ { text: "aud", role: "Latin Root", meaning: "hear" }, { text: "-orium", role: "Suffix", meaning: "a place for" } ], fullMeaning: "a large hall built for an audience to hear performances", distractorFull: ["a place to store tractors", "a book of drawings", "a clock that tracks time"] },
+        { word: "audio", parts: [ { text: "aud", role: "Latin Root", meaning: "hear" }, { text: "-io", role: "Suffix", meaning: "relating to" } ], fullMeaning: "relating to sound that can be heard", distractorFull: ["silent pictures only", "bright flashing lights", "writing on paper"] },
+        { word: "chronology", parts: [ { text: "chron", role: "Greek Root", meaning: "time" }, { text: "-ology", role: "Suffix", meaning: "study or order of" } ], fullMeaning: "the arrangement of events in order of time", distractorFull: ["the study of distant stars", "the act of writing", "pulling heavy loads"] },
+        { word: "chronic", parts: [ { text: "chron", role: "Greek Root", meaning: "time" }, { text: "-ic", role: "Suffix", meaning: "having the nature of" } ], fullMeaning: "continuing for a long period of time", distractorFull: ["happening for one second", "never occurring at all", "relating to outer space"] },
+        { word: "extract", parts: [ { text: "ex-", role: "Prefix", meaning: "out, away" }, { text: "tract", role: "Latin Root", meaning: "to drag or pull" } ], fullMeaning: "pull or draw something out", distractorFull: ["push together inside", "speak softly", "look closely"] },
+        { word: "tractor", parts: [ { text: "tract", role: "Latin Root", meaning: "to drag or pull" }, { text: "-or", role: "Suffix", meaning: "thing that does" } ], fullMeaning: "a powerful vehicle that pulls heavy farm loads", distractorFull: ["a tiny bicycle", "a boat floating on air", "pushing boxes by hand"] },
+        { word: "autograph", parts: [ { text: "auto-", role: "Greek Root", meaning: "self" }, { text: "graph", role: "Greek Root", meaning: "write" } ], fullMeaning: "a person's own signature written by themselves", distractorFull: ["a story written by a stranger", "a self-driving car", "erasing a signature"] },
+        { word: "biology", parts: [ { text: "bio-", role: "Greek Root", meaning: "life" }, { text: "-ology", role: "Suffix", meaning: "study of" } ], fullMeaning: "the scientific study of living things", distractorFull: ["the study of rocks and soil", "measuring distant planets", "writing music"] },
+        { word: "spectator", parts: [ { text: "spect", role: "Latin Root", meaning: "look, watch" }, { text: "-ator", role: "Suffix", meaning: "person who does" } ], fullMeaning: "a person who watches a game, show, or event", distractorFull: ["an athlete playing on field", "a referee blowing a whistle", "closing eyes during a game"] },
+        { word: "inspect", parts: [ { text: "in-", role: "Prefix", meaning: "into" }, { text: "spect", role: "Latin Root", meaning: "look, examine" } ], fullMeaning: "look closely into something to check for flaws", distractorFull: ["ignore every detail", "look away quickly", "before building a model"] },
+        { word: "rejection", parts: [ { text: "re-", role: "Prefix", meaning: "back" }, { text: "ject", role: "Latin Root", meaning: "throw" }, { text: "-ion", role: "Suffix", meaning: "act or state of" } ], fullMeaning: "the act of throwing back or refusing an idea", distractorFull: ["accepting eagerly", "building together", "carrying across"] },
+        { word: "inject", parts: [ { text: "in-", role: "Prefix", meaning: "into" }, { text: "ject", role: "Latin Root", meaning: "throw, force" } ], fullMeaning: "force a liquid or substance into something", distractorFull: ["pull liquid out", "throw far away", "listen carefully"] },
+        { word: "hemisphere", parts: [ { text: "hemi-", role: "Prefix", meaning: "half" }, { text: "sphere", role: "Greek Root", meaning: "round 3D globe" } ], fullMeaning: "half of a round globe or the Earth", distractorFull: ["a flat paper rectangle", "two whole planets combined", "the center core of Earth"] },
+        { word: "geology", parts: [ { text: "geo-", role: "Greek Root", meaning: "earth, rock" }, { text: "-ology", role: "Suffix", meaning: "study of" } ], fullMeaning: "the study of the Earth's rocks and structure", distractorFull: ["the study of ocean fish", "measuring wind speed", "writing poetry"] },
+        { word: "thermostat", parts: [ { text: "therm-", role: "Greek Root", meaning: "heat" }, { text: "stat", role: "Greek Root", meaning: "keep steady / stand" } ], fullMeaning: "a device that keeps room heat steady", distractorFull: ["a tool for measuring distance", "a clock that chimes hourly", "a lens for tiny germs"] }
+      ]
+    };
+
+    const BOSS_WORDS = [
+      { word: "unpredictable", parts: [ { text: "un-", role: "Prefix", meaning: "not" }, { text: "predict", role: "Root", meaning: "say before" }, { text: "-able", role: "Suffix", meaning: "capable of" } ], fullMeaning: "not capable of being known or said before it happens", distractorFull: ["easy to guess ahead of time", "happening in the past", "written down clearly"] },
+      { word: "reconstruction", parts: [ { text: "re-", role: "Prefix", meaning: "again" }, { text: "construct", role: "Root", meaning: "build together" }, { text: "-ion", role: "Suffix", meaning: "act or process" } ], fullMeaning: "the process of building something together again", distractorFull: ["tearing a building down", "before drawing blueprints", "unable to be built"] },
+      { word: "disagreement", parts: [ { text: "dis-", role: "Prefix", meaning: "not / opposite" }, { text: "agree", role: "Base Word", meaning: "share same view" }, { text: "-ment", role: "Suffix", meaning: "state or result" } ], fullMeaning: "a state of having different or opposite opinions", distractorFull: ["complete harmony", "agreeing twice", "before speaking"] },
+      { word: "transportation", parts: [ { text: "trans-", role: "Prefix", meaning: "across" }, { text: "port", role: "Latin Root", meaning: "carry" }, { text: "-ation", role: "Suffix", meaning: "system or process" } ], fullMeaning: "a system for carrying people or goods across distances", distractorFull: ["staying in one place", "breaking cargo apart", "storing items underground"] },
+      { word: "microscopic", parts: [ { text: "micro-", role: "Prefix", meaning: "tiny" }, { text: "scop", role: "Greek Root", meaning: "view / look" }, { text: "-ic", role: "Suffix", meaning: "having the nature of" } ], fullMeaning: "so tiny it can only be viewed with a microscope", distractorFull: ["visible from outer space", "giant and heavy", "making loud noises"] }
+    ];
+
+    const DISGUISED_TRAPS = [
+      // Pseudo-Affix Imposters
+      { label: "uncle", reason: '"uncle" starts with "un-", but it is NOT a prefix!' },
+      { label: "under", reason: '"under" is a single root word—not "un- + der"!' },
+      { label: "reach", reason: '"reach" starts with "re-", but "ach" is not a base word!' },
+      { label: "pretty", reason: '"pretty" is a single word—not "pre- + tty"!' },
+      { label: "distance", reason: '"distance" starts with "dis-", not "dis- + tance"!' },
+      { label: "mist", reason: '"mist" is a single root—not the prefix "mis-"!' },
+      { label: "strict", reason: '"strict" is a single word—not "struct"!' },
+      { label: "chrome", reason: '"chrome" is a single root—not "chron" (time)!' },
+      { label: "water", reason: '"water" ends in "-er", but it is not someone who "wats"!' },
+      { label: "witness", reason: '"witness" is a single word—not "wit + -ness"!' },
+      { label: "corner", reason: '"corner" is a single noun—not "corn + -er"!' },
+      { label: "mother", reason: '"mother" is a single root word—cannot be split!' },
+      { label: "paper", reason: '"paper" is a single noun—not "pap + -er"!' },
+      { label: "silver", reason: '"silver" is an indivisible root word!' },
+      // Solid Monomorphemic Roots
+      { label: "elephant", reason: '"elephant" is a solid single morpheme—cannot split!' },
+      { label: "umbrella", reason: '"umbrella" is a single indivisible root word!' },
+      { label: "crocodile", reason: '"crocodile" has no prefixes or suffixes!' },
+      { label: "purple", reason: '"purple" is a solid monomorphemic word!' },
+      { label: "window", reason: '"window" is a single root—cannot be sliced!' },
+      { label: "banana", reason: '"banana" is a single indivisible word!' },
+      { label: "giraffe", reason: '"giraffe" is a single root—no affixes!' },
+      { label: "mountain", reason: '"mountain" is a solid single root word!' },
+      // Illegal Morphological Combinations
+      { label: "unjump", reason: 'Illegal combo! "un-" does not attach to "jump"!' },
+      { label: "prehappy", reason: 'Illegal combo! "pre-" cannot attach to "happy"!' },
+      { label: "joyed", reason: 'Illegal combo! "-ed" attaches to verbs, not noun "joy"!' },
+      { label: "teachless", reason: 'Illegal combo! "-less" attaches to nouns, not verb "teach"!' },
+      { label: "runful", reason: 'Illegal combo! "-ful" does not attach to verb "run"!' },
+      { label: "catly", reason: 'Illegal combo! "-ly" does not attach to noun "cat"!' },
+      { label: "desked", reason: 'Illegal combo! "desk" is a noun, not a past-tense verb!' },
+      // Corrupted Spellings
+      { label: "teleskope", reason: 'Corrupted spelling! Root "scope" is spelled with a C!' },
+      { label: "submareen", reason: 'Corrupted spelling! "marine" is misspelled!' },
+      { label: "konstrukt", reason: 'Corrupted spelling! "construct" uses C, not K!' },
+      { label: "unhappi", reason: 'Corrupted spelling! Base word "happy" ends in Y!' },
+      { label: "mikroscope", reason: 'Corrupted spelling! Prefix "micro-" uses C, not K!' },
+      { label: "predikt", reason: 'Corrupted spelling! Root "dict" ends in CT!' }
+    ];
+
+    const GOLDEN_ROOTS = [
+      { root: "spect", meaning: "to look / watch" },
+      { root: "rupt", meaning: "to break / burst" },
+      { root: "dict", meaning: "to say / speak" },
+      { root: "chron", meaning: "time" },
+      { root: "struct", meaning: "to build" },
+      { root: "port", meaning: "to carry" },
+      { root: "graph", meaning: "to write" },
+      { root: "bio", meaning: "life" }
+    ];
+
+    const RELIC_POOL = [
+      { id: "chrono", icon: "⏳", name: "Chrono Blade", desc: "Words launch slower and hang 25% longer at the peak of their arc." },
+      { id: "laser", icon: "⚡", name: "Laser Edge", desc: "Doubles the Perfect Cut zone width and adds +40 bonus slice points." },
+      { id: "aegis", icon: "🛡️", name: "Aegis Deflector", desc: "Gain +2 Energy Shields now and +1 Shield at the start of every floor." },
+      { id: "thirdeye", icon: "👁️", name: "Sensei's 3rd Eye", desc: "Reveals a subtle 👁️ TRAP glitch tag on disguised morphological traps!" },
+      { id: "vampire", icon: "🧛", name: "Vampiric Scroll", desc: "Mastering a word with a Perfect Cut restores +1 HP (up to Max HP)." },
+      { id: "twin", icon: "⚔️", name: "Twin Slash", desc: "Automatically severs 1 seam on Armored Boss Words and doubles root orb loot." },
+      { id: "phoenix", icon: "🔥", name: "Phoenix Feather", desc: "Revives you once at 2 HP with a clearing shockwave if you take lethal damage." },
+      { id: "heart", icon: "💖", name: "Cyber Heart", desc: "Increases Max HP by +1 and immediately heals you to full HP." }
+    ];
+
+    const EXTRA_MEANING_DISTRACTORS = [
+      "in the middle of", "full of energy", "someone who", "before", "again, back", "without", "under, below",
+      "wrongly, badly", "to carry", "to build", "to break, burst", "to hear", "distant, far", "time", "past tense verb"
+    ];
+
+    /* ========================================================================
+       2. 16-BIT PROCEDURAL WEB AUDIO SYNTHWAVE ENGINE
+       ======================================================================== */
+    let audioCtx = null, masterGain = null, musicGain = null, sfxGain = null, noiseBuf = null;
+    let audioEnabled = true;
+    let musicEnabled = true;
+    const pulseWaves = {};
+    const MUSIC_LEVEL_PLAY = 0.5, MUSIC_LEVEL_DEFINE = 0.2, MUSIC_LEVEL_OVER = 0.1;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        audioCtx = new Ctx();
+        const comp = audioCtx.createDynamicsCompressor();
+        comp.threshold.value = -14; comp.ratio.value = 6;
+        masterGain = audioCtx.createGain(); masterGain.gain.value = 0.9;
+        musicGain = audioCtx.createGain(); musicGain.gain.value = MUSIC_LEVEL_PLAY;
+        sfxGain = audioCtx.createGain(); sfxGain.gain.value = 0.9;
+        musicGain.connect(masterGain); sfxGain.connect(masterGain);
+        masterGain.connect(comp); comp.connect(audioCtx.destination);
+
+        noiseBuf = audioCtx.createBuffer(1, audioCtx.sampleRate, audioCtx.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function getPulse(duty) {
+      if (!pulseWaves[duty]) {
+        const n = 32;
+        const real = new Float32Array(n), imag = new Float32Array(n);
+        for (let i = 1; i < n; i++) real[i] = (2 / (i * Math.PI)) * Math.sin(i * Math.PI * duty);
+        pulseWaves[duty] = audioCtx.createPeriodicWave(real, imag);
+      }
+      return pulseWaves[duty];
+    }
+
+    function tone(freq, t, dur, wave, vol, dest, freq2) {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      if (typeof wave === 'number') osc.setPeriodicWave(getPulse(wave)); else osc.type = wave;
+      osc.frequency.setValueAtTime(freq, t);
+      if (freq2 && freq2 !== freq) osc.frequency.exponentialRampToValueAtTime(Math.max(20, freq2), t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.connect(g); g.connect(dest);
+      osc.start(t); osc.stop(t + dur + 0.03);
+    }
+
+    function noiseHit(t, dur, vol, dest, hpFreq) {
+      const src = audioCtx.createBufferSource();
+      src.buffer = noiseBuf;
+      const hp = audioCtx.createBiquadFilter();
+      hp.type = 'highpass'; hp.frequency.value = hpFreq;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      src.connect(hp); hp.connect(g); g.connect(dest);
+      src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.02);
+    }
+
+    const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+
+    const BPM_BY_LEVEL = [108, 112, 116, 120, 128];
+    let STEP = 60 / BPM_BY_LEVEL[0] / 4;
+    let musicIntensity = 0;
+    let activeIntensity = 0;
+    const CHORDS = [
+      { root: 45, tones: [57, 60, 64] },
+      { root: 41, tones: [57, 60, 65] },
+      { root: 48, tones: [55, 60, 64] },
+      { root: 43, tones: [55, 59, 62] },
+      { root: 45, tones: [57, 60, 64] },
+      { root: 41, tones: [57, 60, 65] },
+      { root: 43, tones: [55, 59, 62] },
+      { root: 40, tones: [56, 59, 64] }
+    ];
+    const LEAD = [
+      [[0,76,3],[4,72,2],[6,74,2],[8,76,4],[12,79,3]],
+      [[0,77,3],[4,72,2],[6,77,2],[8,76,4],[12,72,4]],
+      [[0,79,3],[4,76,2],[6,72,2],[8,76,4],[12,79,4]],
+      [[0,74,3],[4,71,2],[6,74,2],[8,79,6],[14,74,2]],
+      [[0,81,3],[4,79,2],[6,76,2],[8,72,4],[12,76,4]],
+      [[0,77,3],[4,81,2],[6,77,2],[8,72,4],[12,77,4]],
+      [[0,79,3],[4,74,2],[6,79,2],[8,83,4],[12,79,2],[14,74,2]],
+      [[0,80,3],[4,76,2],[6,80,2],[8,83,4],[12,76,4]]
+    ];
+    const BASS_OFFSETS = [0, 0, 12, 0, 0, 0, 12, 7];
+    const ARP_PATTERN = [0, 1, 2, 1];
+
+    let nextStepTime = 0, stepIndex = 0, musicTimer = null;
+
+    function scheduleStep(step, t) {
+      const bar = Math.floor(step / 16) % 8;
+      const s = step % 16;
+      if (s === 0 && bar % 2 === 0) {
+        activeIntensity = musicIntensity;
+        STEP = 60 / BPM_BY_LEVEL[activeIntensity] / 4;
+      }
+      const L = activeIntensity;
+      const chord = CHORDS[bar];
+
+      if (L === 0) { if (s === 0 || s === 8) tone(150, t, 0.16, 'sine', 0.7, musicGain, 42); }
+      else if (s % 4 === 0) tone(150, t, 0.16, 'sine', 0.9, musicGain, 42);
+
+      if (L >= 2 && (s === 4 || s === 12)) { noiseHit(t, 0.14, 0.38, musicGain, 1500); tone(220, t, 0.08, 'triangle', 0.18, musicGain, 120); }
+      if (L >= 4 && bar % 4 === 3 && s > 12) noiseHit(t, 0.08, 0.25, musicGain, 1800);
+
+      if (L >= 1 && s % 4 === 2) noiseHit(t, 0.05, 0.13, musicGain, 7000);
+      if (L >= 3 && s % 2 === 1) noiseHit(t, 0.03, 0.05, musicGain, 9000);
+
+      if (L === 0) {
+        if (s === 0 || s === 8) tone(mtof(chord.root), t, STEP * 7, 'triangle', 0.2, musicGain);
+      } else if (s % 2 === 0) {
+        tone(mtof(chord.root + BASS_OFFSETS[s / 2]), t, STEP * 1.8, 'sawtooth', 0.13, musicGain);
+      }
+
+      const arpNote = chord.tones[ARP_PATTERN[s % 4]] + (s >= 8 ? 12 : 0);
+      if (L === 0) { if (s % 2 === 0) tone(mtof(arpNote), t, STEP * 1.6, 0.125, 0.035, musicGain); }
+      else tone(mtof(arpNote), t, STEP * 0.9, 0.125, 0.06, musicGain);
+      if (L >= 4) tone(mtof(arpNote + 12), t, STEP * 0.8, 0.125, 0.035, musicGain);
+
+      if (L >= 2) {
+        LEAD[bar].forEach(([ls, note, len]) => {
+          if (ls !== s) return;
+          tone(mtof(note), t, STEP * len * 0.95, 0.25, 0.085, musicGain);
+          if (L >= 3) tone(mtof(note - 12), t, STEP * len * 0.95, 0.5, 0.05, musicGain);
+        });
+      }
+    }
+
+    function musicScheduler() {
+      if (!audioCtx) return;
+      while (nextStepTime < audioCtx.currentTime + 0.18) {
+        scheduleStep(stepIndex, nextStepTime);
+        nextStepTime += STEP;
+        stepIndex = (stepIndex + 1) % 128;
+      }
+    }
+
+    function startMusic() {
+      if (!audioCtx || !musicEnabled || musicTimer) return;
+      stepIndex = 0;
+      nextStepTime = audioCtx.currentTime + 0.08;
+      musicTimer = setInterval(musicScheduler, 40);
+    }
+
+    function stopMusic() {
+      clearInterval(musicTimer);
+      musicTimer = null;
+    }
+
+    function setMusicLevel(level) {
+      if (!audioCtx) return;
+      musicGain.gain.setTargetAtTime(level, audioCtx.currentTime, 0.12);
+    }
+
+    function toggleMusic() {
+      initAudio();
+      musicEnabled = !musicEnabled;
+      const btn = document.getElementById('musicBtn');
+      btn.textContent = musicEnabled ? '🎵 Music' : '🔇 Music';
+      btn.classList.toggle('btn-off', !musicEnabled);
+      if (musicEnabled) startMusic(); else stopMusic();
+    }
+
+    function toggleAudio() {
+      initAudio();
+      audioEnabled = !audioEnabled;
+      const btn = document.getElementById('audioBtn');
+      btn.textContent = audioEnabled ? '🔊 SFX' : '🔇 SFX';
+      btn.classList.toggle('btn-off', !audioEnabled);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!audioCtx) return;
+      if (document.hidden) audioCtx.suspend(); else audioCtx.resume();
+    });
+
+    function sfxReady() { return audioEnabled && audioCtx; }
+    const sfx = {
+      swoosh: () => { if (!sfxReady()) return; const t = audioCtx.currentTime; noiseHit(t, 0.09, 0.12, sfxGain, 2500); },
+      slice: () => {
+        if (!sfxReady()) return; const t = audioCtx.currentTime;
+        tone(1300, t, 0.13, 0.25, 0.14, sfxGain, 260);
+        tone(880, t + 0.04, 0.16, 'square', 0.07, sfxGain, 1320);
+        noiseHit(t, 0.1, 0.12, sfxGain, 3000);
+      },
+      armorHit: () => {
+        if (!sfxReady()) return; const t = audioCtx.currentTime;
+        tone(520, t, 0.09, 'square', 0.14, sfxGain, 880);
+        noiseHit(t, 0.07, 0.15, sfxGain, 4200);
+      },
+      partCorrect: () => {
+        if (!sfxReady()) return; const t = audioCtx.currentTime;
+        tone(659.25, t, 0.08, 0.25, 0.12, sfxGain);
+        tone(987.77, t + 0.08, 0.14, 0.25, 0.12, sfxGain);
+      },
+      wordMastered: () => {
+        if (!sfxReady()) return; const t = audioCtx.currentTime;
+        [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((n, i) => tone(n, t + i * 0.07, 0.16, 0.25, 0.12, sfxGain));
+      },
+      wrong: () => {
+        if (!sfxReady()) return; const t = audioCtx.currentTime;
+        tone(180, t, 0.2, 'sawtooth', 0.13, sfxGain, 90);
+      },
+      bomb: () => {
+        if (!sfxReady()) return; const t = audioCtx.currentTime;
+        noiseHit(t, 0.4, 0.35, sfxGain, 180);
+        tone(140, t, 0.38, 'square', 0.16, sfxGain, 38);
+      },
+      levelUp: () => {
+        if (!sfxReady()) return; const t = audioCtx.currentTime;
+        [392, 523.25, 659.25, 783.99, 1046.5, 1568].forEach((n, i) => tone(n, t + i * 0.05, 0.12, 0.25, 0.1, sfxGain));
+      },
+      gameOver: () => {
+        if (!sfxReady()) return; const t = audioCtx.currentTime;
+        [523.25, 415.3, 329.63, 261.63, 196].forEach((n, i) => tone(n, t + i * 0.16, 0.22, 0.5, 0.13, sfxGain));
+      }
+    };
+
+    /* ========================================================================
+       3. ROGUELIKE GAME STATE & NO-REPEAT QUEUE SYSTEM
+       ======================================================================== */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const SAVE_KEY = 'morpheme_ninja_rogue_v2';
+
+    const game = {
+      running: false,
+      inDefinitionPhase: false,
+      setKey: 'set1',
+      score: 0,
+      best: 0,
+      bestFloor: 1,
+      floor: 1,
+      floorEncounters: 0,
+      encountersPerFloor: 5,
+      hp: 3,
+      maxHp: 3,
+      shield: 0,
+      relics: [],
+      phoenixUsed: false,
+      masteredList: [],
+      wordQueue: [],
+      recentWords: [], // 12-word No-Repeat History Window
+      activeScrolls: [],
+      splitHalves: [],
+      bladeTrail: [],
+      particles: [],
+      popups: [],
+      spawnCooldown: 0.6,
+      lastSwooshTime: 0,
+      challenge: null,
+      waveMode: 'NORMAL', // NORMAL, BOSS, TARGET, BLITZ
+      targetHint: null,
+      blitzTimeLeft: 0,
+      runWords: 0,
+      bestAtStart: 0,
+      announcedLevel: 0,
+      ninja: {
+        slashTimer: 0,
+        hurtTimer: 0,
+        jumpOffset: 0,
+        shieldPulse: 0
+      }
+    };
+
+    const RECENT_HISTORY_LIMIT = 12;
+    const POWER_LABELS = ['WARM UP', 'GROOVING', 'HEATING UP', 'ON FIRE', 'MAX POWER'];
+    const POWER_THRESHOLDS = [1, 3, 6, 10];
+
+    function hasRelic(id) {
+      return game.relics.some(r => r.id === id);
+    }
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // Automatic Floor-Based Tier Scaling when starting on Tier 1
+    function getPoolForSet(setKey) {
+      if (setKey === 'all') {
+        return [...WORD_SCROLLS.set1, ...WORD_SCROLLS.set2, ...WORD_SCROLLS.set3];
+      }
+      if (setKey === 'set1') {
+        if (game.floor >= 3) return [...WORD_SCROLLS.set1, ...WORD_SCROLLS.set2, ...WORD_SCROLLS.set3];
+        if (game.floor === 2) return [...WORD_SCROLLS.set1, ...WORD_SCROLLS.set2];
+        return [...WORD_SCROLLS.set1];
+      }
+      return [...(WORD_SCROLLS[setKey] || WORD_SCROLLS.set1)];
+    }
+
+    function recordSeenWord(word) {
+      game.recentWords = game.recentWords.filter(w => w !== word);
+      game.recentWords.push(word);
+      if (game.recentWords.length > RECENT_HISTORY_LIMIT) {
+        game.recentWords.shift();
+      }
+    }
+
+    function refillQueue() {
+      const pool = shuffle(getPoolForSet(game.setKey));
+      const fresh = pool.filter(w => !game.recentWords.includes(w.word));
+      const older = pool.filter(w => game.recentWords.includes(w.word));
+      game.wordQueue = [...fresh, ...older];
+    }
+
+    function drawNextWordFromQueue(excludeSet = new Set()) {
+      if (game.wordQueue.length === 0) refillQueue();
+      const blocked = new Set([...game.recentWords, ...excludeSet]);
+      let idx = game.wordQueue.findIndex(item => !blocked.has(item.word));
+      if (idx === -1) {
+        refillQueue();
+        const softBlocked = new Set([...game.recentWords.slice(-6), ...excludeSet]);
+        idx = game.wordQueue.findIndex(item => !softBlocked.has(item.word));
+      }
+      if (idx === -1) idx = 0;
+      const chosen = game.wordQueue.splice(idx, 1)[0];
+      recordSeenWord(chosen.word);
+      return chosen;
+    }
+
+    function loadSave() {
+      try {
+        const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+        game.best = s.best || 0;
+        game.bestFloor = s.bestFloor || 1;
+        const all = [...WORD_SCROLLS.set1, ...WORD_SCROLLS.set2, ...WORD_SCROLLS.set3, ...BOSS_WORDS];
+        game.masteredList = (s.mastered || []).map(w => all.find(e => e.word === w)).filter(Boolean);
+      } catch (e) {}
+    }
+
+    function persist() {
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({
+          best: game.best,
+          bestFloor: game.bestFloor,
+          mastered: game.masteredList.map(m => m.word)
+        }));
+      } catch (e) {}
+    }
+
+    function updateHud() {
+      if (game.score > game.best) game.best = game.score;
+      if (game.floor > game.bestFloor) game.bestFloor = game.floor;
+
+      document.getElementById('hudFloor').textContent = `FLOOR ${game.floor}`;
+      const fullHearts = '❤'.repeat(Math.max(0, game.hp));
+      const emptyHearts = '🖤'.repeat(Math.max(0, game.maxHp - game.hp));
+      document.getElementById('hudLives').textContent = (fullHearts + emptyHearts) || '💀';
+
+      const shieldEl = document.getElementById('hudShield');
+      if (game.shield > 0) {
+        shieldEl.style.display = 'inline-flex';
+        shieldEl.textContent = `🛡️ ${game.shield}`;
+      } else {
+        shieldEl.style.display = 'none';
+      }
+
+      const tray = document.getElementById('relicTray');
+      tray.innerHTML = game.relics.map(r => `<span class="relic-badge" title="${r.name}: ${r.desc}">${r.icon}</span>`).join('');
+
+      document.getElementById('masteredCount').textContent = game.masteredList.length;
+      refreshIntensity();
+    }
+
+    function computeIntensity() {
+      let level = POWER_THRESHOLDS.filter(t => game.runWords >= t).length;
+      if (game.bestAtStart > 0 && game.score > game.bestAtStart) level = 4;
+      return level;
+    }
+
+    function refreshIntensity() {
+      musicIntensity = computeIntensity();
+      updateProgressBar();
+    }
+
+    function announcePowerUp() {
+      if (musicIntensity > game.announcedLevel) {
+        sfx.levelUp();
+        game.popups.push({ x: canvas.width / 2, y: canvas.height * 0.28, text: POWER_LABELS[musicIntensity] + '!', color: '#ffe14a', life: 1.5 });
+      }
+      game.announcedLevel = musicIntensity;
+    }
+
+    function updateProgressBar() {
+      const goal = game.encountersPerFloor;
+      document.getElementById('pbFloorProgress').textContent = `${game.floorEncounters} / ${goal}`;
+      document.getElementById('pbFloorFill').style.width = `${Math.min(100, (game.floorEncounters / goal) * 100)}%`;
+
+      const segs = document.querySelectorAll('#pbSegs i');
+      segs.forEach((el, idx) => el.classList.toggle('on', idx <= musicIntensity));
+      document.getElementById('pbSegs').classList.toggle('max', musicIntensity === 4);
+
+      const newHi = game.bestAtStart > 0 && game.score > game.bestAtStart;
+      document.getElementById('pbPowerLabel').textContent = newHi ? 'NEW HI-SCORE!' : POWER_LABELS[musicIntensity];
+      document.getElementById('pbScore').textContent = `SCORE ${game.score} • HI ${game.best}`;
+      document.getElementById('pbBestFloor').textContent = `BEST FL ${game.bestFloor}`;
+
+      const target = game.bestAtStart > 0 ? game.bestAtStart : 400;
+      const fill = document.getElementById('pbHiFill');
+      fill.style.width = `${Math.min(100, (game.score / target) * 100)}%`;
+      fill.classList.toggle('new', newHi);
+
+      const tag = document.getElementById('waveTag');
+      if (game.waveMode === 'BOSS') {
+        tag.textContent = `FLOOR ${game.floor} • BOSS`;
+        tag.className = 'wave-tag boss';
+      } else if (game.waveMode === 'BLITZ') {
+        tag.textContent = `BLITZ ${Math.max(0, game.blitzTimeLeft).toFixed(1)}s`;
+        tag.className = 'wave-tag blitz';
+      } else if (game.waveMode === 'TARGET') {
+        tag.textContent = `SENSEI TARGET`;
+        tag.className = 'wave-tag target';
+      } else {
+        tag.textContent = `FLOOR ${game.floor} • ${game.floorEncounters + 1}/${goal}`;
+        tag.className = 'wave-tag';
+      }
+    }
+
+    /* ========================================================================
+       4. RUN LOOP, FLOOR PROGRESSION & RELIC DRAFTS
+       ======================================================================== */
+    function startDojoSession() {
+      initAudio();
+      document.getElementById('introModal').style.display = 'none';
+      startMusic();
+      setMusicLevel(MUSIC_LEVEL_PLAY);
+      restartDojo();
+    }
+
+    function openIntroModal() { document.getElementById('introModal').style.display = 'flex'; }
+
+    function openScrollModal() {
+      const grid = document.getElementById('scrollBankGrid');
+      grid.innerHTML = '';
+      if (!game.masteredList.length) {
+        grid.innerHTML = `<p style="color:var(--muted); width:100%; text-align:center;">Slice true words and master their parts to build your permanent Word Book!</p>`;
+      } else {
+        game.masteredList.forEach(item => {
+          const chip = document.createElement('div');
+          chip.className = 'scroll-chip';
+          const breakdown = item.parts.map(p => `${p.text} (${p.meaning})`).join(' + ');
+          chip.innerHTML = `<div class="w">✦ ${item.word}</div><div class="b">${breakdown}</div><div class="m">= "${item.fullMeaning}"</div>`;
+          grid.appendChild(chip);
+        });
+      }
+      document.getElementById('gameOverModal').style.display = 'none';
+      document.getElementById('scrollModal').style.display = 'flex';
+    }
+
+    function changeSet() {
+      game.setKey = document.getElementById('curriculumSetSelect').value;
+      restartDojo();
+    }
+
+    function restartDojo() {
+      game.setKey = document.getElementById('curriculumSetSelect').value;
+      game.score = 0;
+      game.floor = 1;
+      game.floorEncounters = 0;
+      game.maxHp = 3;
+      game.hp = 3;
+      game.shield = 0;
+      game.relics = [];
+      game.phoenixUsed = false;
+      game.inDefinitionPhase = false;
+      game.activeScrolls = [];
+      game.splitHalves = [];
+      game.bladeTrail = [];
+      game.particles = [];
+      game.popups = [];
+      game.recentWords = [];
+      refillQueue();
+      game.runWords = 0;
+      game.bestAtStart = game.best;
+      game.announcedLevel = 0;
+      game.waveMode = 'NORMAL';
+      game.targetHint = null;
+      game.blitzTimeLeft = 0;
+      musicIntensity = 0;
+      activeIntensity = 0;
+      STEP = 60 / BPM_BY_LEVEL[0] / 4;
+      game.spawnCooldown = 0.5;
+      game.running = true;
+
+      document.getElementById('definitionOverlay').style.display = 'none';
+      document.getElementById('gameOverModal').style.display = 'none';
+      document.getElementById('relicModal').style.display = 'none';
+      if (audioCtx) { if (musicEnabled && !musicTimer) startMusic(); setMusicLevel(MUSIC_LEVEL_PLAY); }
+      updateHud();
+      document.getElementById('senseiBanner').innerHTML = `Floor 1: Slice true morpheme seams! <strong style="color:var(--pink);">Let disguised traps drop.</strong>`;
+    }
+
+    function advanceEncounter(wasBlitzClear = false) {
+      if (!wasBlitzClear) {
+        game.floorEncounters++;
+      }
+      updateHud();
+
+      if (game.floorEncounters >= game.encountersPerFloor) {
+        // Floor cleared! Open 3-Card Relic Draft
+        game.running = false;
+        game.activeScrolls = [];
+        sfx.levelUp();
+        openRelicDraftModal();
+      } else {
+        configureNextEncounterMode();
+      }
+    }
+
+    function configureNextEncounterMode() {
+      const nextIdx = game.floorEncounters + 1;
+      if (game.floor % 3 === 0 && nextIdx === game.encountersPerFloor) {
+        game.waveMode = 'BOSS';
+        game.targetHint = null;
+        document.getElementById('senseiBanner').innerHTML = `<strong style="color:var(--pink);">⚔️ BOSS WORD!</strong> Slice BOTH cyan seams on the 3-morpheme scroll!`;
+      } else if (nextIdx === 4) {
+        game.waveMode = 'BLITZ';
+        game.blitzTimeLeft = 10.0;
+        game.targetHint = null;
+        document.getElementById('senseiBanner').innerHTML = `<strong style="color:var(--yellow);">⚡ 10s MORPHEME BLITZ!</strong> Slice real complex words fast—avoid traps!`;
+      } else if (nextIdx === 3) {
+        game.waveMode = 'TARGET';
+        document.getElementById('senseiBanner').innerHTML = `Preparing <strong style="color:var(--green);">Sensei Target</strong> challenge...`;
+      } else {
+        game.waveMode = 'NORMAL';
+        game.targetHint = null;
+        const scaleNote = (game.setKey === 'set1' && game.floor >= 2) ? ` (Tier ${Math.min(3, game.floor)} words unlocked!)` : '';
+        document.getElementById('senseiBanner').innerHTML = `Floor ${game.floor}${scaleNote}: Slice true seams, dodge traps!`;
+      }
+      updateProgressBar();
+    }
+
+    function openRelicDraftModal() {
+      document.getElementById('relicModalSub').textContent = `FLOOR ${game.floor} CLEARED!`;
+      const available = RELIC_POOL.filter(r => !hasRelic(r.id));
+      const choices = shuffle(available.length >= 3 ? available : RELIC_POOL).slice(0, 3);
+      const grid = document.getElementById('relicDraftGrid');
+      grid.innerHTML = '';
+
+      choices.forEach(relic => {
+        const card = document.createElement('div');
+        card.className = 'relic-card';
+        card.innerHTML = `<div class="relic-icon">${relic.icon}</div><div class="relic-name">${relic.name}</div><div class="relic-desc">${relic.desc}</div>`;
+        card.onclick = () => selectRelic(relic);
+        grid.appendChild(card);
+      });
+
+      document.getElementById('relicModal').style.display = 'flex';
+    }
+
+    function selectRelic(relic) {
+      if (!hasRelic(relic.id)) {
+        game.relics.push(relic);
+      }
+      if (relic.id === 'aegis') game.shield += 2;
+      if (relic.id === 'heart') { game.maxHp += 1; game.hp = game.maxHp; }
+      sfx.wordMastered();
+      startNextFloor();
+    }
+
+    function chooseMeditate() {
+      game.hp = Math.min(game.maxHp, game.hp + 1);
+      game.shield += 1;
+      sfx.partCorrect();
+      startNextFloor();
+    }
+
+    function startNextFloor() {
+      document.getElementById('relicModal').style.display = 'none';
+      game.floor++;
+      game.floorEncounters = 0;
+      if (hasRelic('aegis')) game.shield += 1;
+      refillQueue();
+      configureNextEncounterMode();
+      game.running = true;
+      game.spawnCooldown = 0.55;
+      updateHud();
+    }
+
+    /* ========================================================================
+       5. WAVE LAUNCHERS (MULTI-TARGET, BOSS, BLITZ, TARGET, GOLDEN ORBS)
+       ======================================================================== */
+    function launchNextScrollWave() {
+      const w = canvas.width, h = canvas.height;
+      const gravity = hasRelic('chrono') ? 395 : 510;
+      const onScreen = new Set(game.activeScrolls.map(s => s.label || (s.entry && s.entry.word)));
+
+      // 1) Armored 3-Morpheme Double-Cut Boss Word
+      if (game.waveMode === 'BOSS') {
+        const freshBosses = BOSS_WORDS.filter(b => !game.recentWords.includes(b.word));
+        const pool = freshBosses.length > 0 ? freshBosses : BOSS_WORDS;
+        const bossEntry = pool[Math.floor(Math.random() * pool.length)];
+        recordSeenWord(bossEntry.word);
+
+        const startX = w * 0.5;
+        const targetPeakY = h * 0.22;
+        const riseDist = Math.max(170, (h + 35) - targetPeakY);
+        const vy = -Math.sqrt(2 * gravity * riseDist);
+        const scrollW = Math.max(240, bossEntry.word.length * 21 + 60);
+
+        const seam1Cut = hasRelic('twin');
+        game.activeScrolls.push({
+          kind: 'boss',
+          entry: bossEntry,
+          x: startX, y: h + 40, w: scrollW, h: 78,
+          vx: 0, vy, gravity,
+          angle: 0, vAngle: 0,
+          seams: [
+            { ratio: 0.26, cut: seam1Cut },
+            { ratio: 0.68, cut: false }
+          ]
+        });
+        return;
+      }
+
+      // 2) Sensei Target Wave (2 valid words, only 1 matches the Sensei prompt)
+      if (game.waveMode === 'TARGET') {
+        const pool = getPoolForSet(game.setKey);
+        const targetWord = drawNextWordFromQueue(onScreen);
+        onScreen.add(targetWord.word);
+
+        const differentCandidates = pool.filter(e => e.word !== targetWord.word && e.fullMeaning !== targetWord.fullMeaning && !onScreen.has(e.word));
+        const decoyWord = differentCandidates.length > 0
+          ? differentCandidates[Math.floor(Math.random() * differentCandidates.length)]
+          : drawNextWordFromQueue(onScreen);
+        recordSeenWord(decoyWord.word);
+
+        game.targetHint = targetWord.fullMeaning;
+        document.getElementById('senseiBanner').innerHTML = `🎯 TARGET: Slice the word meaning <strong style="color:var(--green);">"${targetWord.fullMeaning}"</strong>!`;
+
+        const leftFirst = Math.random() < 0.5;
+        spawnWordCard(targetWord, leftFirst ? w * 0.30 : w * 0.70, gravity, false);
+        spawnWordCard(decoyWord, leftFirst ? w * 0.70 : w * 0.30, gravity, true);
+        return;
+      }
+
+      // 3) 10-Second Blitz Wave OR Multi-Target Normal Volley
+      const isBlitz = game.waveMode === 'BLITZ';
+      const count = isBlitz ? 3 : (game.floor >= 2 && Math.random() < 0.6 ? 2 : 1);
+      const lanes = count === 1 ? [w * 0.5] : count === 2 ? [w * 0.31, w * 0.69] : [w * 0.22, w * 0.50, w * 0.78];
+
+      // Guarantee at least 1 real word in every volley
+      const realIndex = Math.floor(Math.random() * count);
+
+      for (let i = 0; i < count; i++) {
+        const xPos = lanes[i] + (Math.random() - 0.5) * 26;
+        if (i === realIndex || Math.random() < 0.55) {
+          const entry = drawNextWordFromQueue(onScreen);
+          onScreen.add(entry.word);
+          spawnWordCard(entry, xPos, gravity, false);
+        } else {
+          // Spawn a Disguised Morphological Trap
+          const availableTraps = DISGUISED_TRAPS.filter(t => !onScreen.has(t.label));
+          const trap = availableTraps[Math.floor(Math.random() * availableTraps.length)] || DISGUISED_TRAPS[0];
+          onScreen.add(trap.label);
+          spawnTrapCard(trap, xPos, gravity);
+        }
+      }
+
+      // Occasional Golden Root Orb bonus target
+      if (Math.random() < 0.24) {
+        const rootObj = GOLDEN_ROOTS[Math.floor(Math.random() * GOLDEN_ROOTS.length)];
+        const startLeft = Math.random() < 0.5;
+        game.activeScrolls.push({
+          kind: 'root_orb',
+          rootData: rootObj,
+          x: startLeft ? -30 : w + 30,
+          y: h * (0.24 + Math.random() * 0.22),
+          r: 34,
+          vx: startLeft ? (230 + Math.random() * 70) : -(230 + Math.random() * 70),
+          vy: -90,
+          gravity: 160,
+          angle: 0,
+          vAngle: 2.2
+        });
+      }
+    }
+
+    function spawnWordCard(entry, startX, gravity, isWrongTarget) {
+      const w = canvas.width, h = canvas.height;
+      const targetPeakY = h * (0.19 + Math.random() * 0.16);
+      const riseDist = Math.max(155, (h + 30) - targetPeakY);
+      const vy = -Math.sqrt(2 * gravity * riseDist);
+      const vx = (w * 0.5 - startX) * (0.35 + Math.random() * 0.25);
+
+      const scrollW = Math.max(166, entry.word.length * 19 + 46);
+      const firstPartLen = entry.parts[0].text.replace(/-/g, '').length;
+      const seamRatio = Math.max(0.24, Math.min(0.76, firstPartLen / entry.word.length));
+
+      game.activeScrolls.push({
+        kind: 'word',
+        entry,
+        isWrongTarget,
+        x: startX, y: h + 35,
+        w: scrollW, h: 68,
+        vx, vy, gravity,
+        angle: (Math.random() - 0.5) * 0.18,
+        vAngle: (Math.random() - 0.5) * 0.65,
+        seamRatio
+      });
+    }
+
+    function spawnTrapCard(trap, startX, gravity) {
+      const w = canvas.width, h = canvas.height;
+      const targetPeakY = h * (0.21 + Math.random() * 0.16);
+      const riseDist = Math.max(150, (h + 30) - targetPeakY);
+      const vy = -Math.sqrt(2 * gravity * riseDist);
+      const vx = (w * 0.5 - startX) * (0.35 + Math.random() * 0.25);
+      const scrollW = Math.max(162, trap.label.length * 19 + 44);
+      const fakeSeamRatio = 0.34 + Math.random() * 0.32;
+
+      game.activeScrolls.push({
+        kind: 'trap',
+        trap,
+        label: trap.label,
+        x: startX, y: h + 35,
+        w: scrollW, h: 68,
+        vx, vy, gravity,
+        angle: (Math.random() - 0.5) * 0.18,
+        vAngle: (Math.random() - 0.5) * 0.65,
+        seamRatio: fakeSeamRatio
+      });
+    }
+
+    /* ========================================================================
+       6. SWIPE BLADE & COMBAT RESOLUTION
+       ======================================================================== */
+    let isPointerDown = false;
+    let lastBladePt = null;
+
+    function getCanvasPoint(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: ((e.clientX - rect.left) / rect.width) * canvas.width,
+        y: ((e.clientY - rect.top) / rect.height) * canvas.height
+      };
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      initAudio();
+      if (!game.running || game.inDefinitionPhase) return;
+      isPointerDown = true;
+      const pt = getCanvasPoint(e);
+      lastBladePt = pt;
+      game.bladeTrail.push({ x: pt.x, y: pt.y, life: 0.22 });
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+      if (!isPointerDown || !game.running || game.inDefinitionPhase) return;
+      const pt = getCanvasPoint(e);
+      game.bladeTrail.push({ x: pt.x, y: pt.y, life: 0.22 });
+      if (lastBladePt) {
+        const dist = Math.hypot(pt.x - lastBladePt.x, pt.y - lastBladePt.y);
+        if (dist > 14) {
+          const now = performance.now();
+          if (now - game.lastSwooshTime > 170) { sfx.swoosh(); game.lastSwooshTime = now; }
+          checkBladeIntersection(lastBladePt, pt);
+          lastBladePt = pt;
+        }
+      }
+    });
+
+    window.addEventListener('pointerup', () => { isPointerDown = false; lastBladePt = null; });
+
+    function segmentIntersectsRect(p1, p2, rx, ry, rw, rh) {
+      for (let i = 0; i <= 8; i++) {
+        const t = i / 8;
+        const sx = p1.x + (p2.x - p1.x) * t;
+        const sy = p1.y + (p2.y - p1.y) * t;
+        if (sx >= rx && sx <= rx + rw && sy >= ry && sy <= ry + rh) return { x: sx, y: sy };
+      }
+      return null;
+    }
+
+    function checkBladeIntersection(p1, p2) {
+      for (let i = game.activeScrolls.length - 1; i >= 0; i--) {
+        const obj = game.activeScrolls[i];
+
+        // 1) Golden Root Orb
+        if (obj.kind === 'root_orb') {
+          const hit = segmentIntersectsRect(p1, p2, obj.x - obj.r, obj.y - obj.r, obj.r * 2, obj.r * 2);
+          if (hit) {
+            game.activeScrolls.splice(i, 1);
+            game.ninja.slashTimer = 0.28;
+            sfx.wordMastered();
+            const mult = hasRelic('twin') ? 2 : 1;
+            const bonus = 80 * mult;
+            game.score += bonus;
+            game.shield += 1;
+            spawnExplosion(obj.x, obj.y, ['#ffe14a', '#2bffb0', '#ffffff'], 24);
+            game.popups.push({ x: obj.x, y: obj.y, text: `ROOT "${obj.rootData.root}" (${obj.rootData.meaning}) +${bonus} +1🛡️`, color: '#ffe14a', life: 1.5 });
+            updateHud();
+            return;
+          }
+          continue;
+        }
+
+        const rx = obj.x - obj.w / 2;
+        const ry = obj.y - obj.h / 2;
+        const hit = segmentIntersectsRect(p1, p2, rx, ry, obj.w, obj.h);
+        if (!hit) continue;
+
+        game.ninja.slashTimer = 0.28;
+
+        // 2) Disguised Morphological Trap
+        if (obj.kind === 'trap') {
+          game.activeScrolls.splice(i, 1);
+          sfx.bomb();
+          spawnExplosion(obj.x, obj.y, ['#ff2e97', '#ff9e4a', '#ffffff'], 28);
+          game.popups.push({ x: obj.x, y: obj.y, text: `TRAP! "${obj.trap.label}"`, color: '#ff2e97', life: 1.4 });
+          damageNinja(obj.trap.reason);
+          return;
+        }
+
+        // 3) Wrong Target in Sensei Target Wave
+        if (obj.kind === 'word' && obj.isWrongTarget) {
+          game.activeScrolls.splice(i, 1);
+          sfx.bomb();
+          spawnExplosion(obj.x, obj.y, ['#ff2e97', '#ffe14a'], 24);
+          damageNinja(`Wrong target! "${obj.entry.word}" means "${obj.entry.fullMeaning}".`);
+          return;
+        }
+
+        // 4) Armored 3-Morpheme Boss Word (Requires 2 seam cuts)
+        if (obj.kind === 'boss') {
+          let cutAny = false;
+          for (const seam of obj.seams) {
+            if (!seam.cut) {
+              const seamX = rx + obj.w * seam.ratio;
+              if (Math.abs(hit.x - seamX) <= 46) {
+                seam.cut = true;
+                cutAny = true;
+                break;
+              }
+            }
+          }
+          if (!cutAny) {
+            const firstUncut = obj.seams.find(s => !s.cut);
+            if (firstUncut) firstUncut.cut = true;
+          }
+
+          if (obj.seams.every(s => s.cut)) {
+            game.activeScrolls.splice(i, 1);
+            sfx.slice();
+            spawnExplosion(hit.x, hit.y, ['#00e5ff', '#ff2e97', '#ffe14a'], 34);
+            game.splitHalves.push(
+              { text: obj.entry.parts[0].text, x: obj.x - 54, y: obj.y, vx: -150, vy: -130, angle: -0.2, life: 0.75 },
+              { text: obj.entry.parts[1].text, x: obj.x, y: obj.y - 12, vx: 0, vy: -160, angle: 0.05, life: 0.75 },
+              { text: obj.entry.parts[2].text, x: obj.x + 54, y: obj.y, vx: 150, vy: -130, angle: 0.2, life: 0.75 }
+            );
+            beginDefinitionChallenge(obj.entry, true);
+          } else {
+            sfx.armorHit();
+            obj.vy = Math.min(obj.vy, -240); // Bounce upward for the second slash!
+            spawnExplosion(hit.x, hit.y, ['#00e5ff', '#ffffff'], 16);
+            game.popups.push({ x: obj.x, y: obj.y - 25, text: '1ST SEAM CUT! SLASH 2ND SEAM!', color: '#00e5ff', life: 1.1 });
+          }
+          return;
+        }
+
+        // 5) Valid 2-Morpheme Word Sign
+        if (obj.kind === 'word') {
+          const seamX = rx + obj.w * obj.seamRatio;
+          const cleanTolerance = hasRelic('laser') ? 64 : 34;
+          const cleanCut = Math.abs(hit.x - seamX) <= cleanTolerance;
+
+          game.activeScrolls.splice(i, 1);
+          sfx.slice();
+          spawnExplosion(hit.x, hit.y, ['#00e5ff', '#ff2e97', '#ffe14a', '#ffffff'], 24);
+
+          game.splitHalves.push(
+            { text: obj.entry.parts[0].text, x: obj.x - 36, y: obj.y, vx: -130, vy: -120, angle: -0.15, life: 0.7 },
+            { text: obj.entry.parts.slice(1).map(p => p.text).join(''), x: obj.x + 36, y: obj.y, vx: 130, vy: -120, angle: 0.15, life: 0.7 }
+          );
+
+          // In 10-second Blitz mode, award points immediately without pausing for the quiz!
+          if (game.waveMode === 'BLITZ') {
+            const pts = (cleanCut ? 65 : 35) + (hasRelic('laser') ? 40 : 0);
+            game.score += pts;
+            game.runWords++;
+            if (!game.masteredList.some(m => m.word === obj.entry.word)) {
+              game.masteredList.push(obj.entry);
+              persist();
+            }
+            game.popups.push({ x: obj.x, y: obj.y, text: `BLITZ +${pts}!`, color: '#2bffb0', life: 0.9 });
+            updateHud();
+          } else {
+            game.activeScrolls = [];
+            beginDefinitionChallenge(obj.entry, cleanCut);
+          }
+          return;
+        }
+      }
+    }
+
+    function damageNinja(reason) {
+      game.ninja.hurtTimer = 0.45;
+      if (game.shield > 0) {
+        game.shield--;
+        game.ninja.shieldPulse = 0.6;
+        updateHud();
+        document.getElementById('senseiBanner').innerHTML = `<span style="color:var(--cyan);">🛡️ Shield blocked damage! ${reason}</span>`;
+        return;
+      }
+
+      game.hp = Math.max(0, game.hp - 1);
+      updateHud();
+      document.getElementById('senseiBanner').innerHTML = `<span style="color:#ff9fcb;">${reason}</span>`;
+
+      if (game.hp <= 0) {
+        // Phoenix Feather Relic Revive
+        if (hasRelic('phoenix') && !game.phoenixUsed) {
+          game.phoenixUsed = true;
+          game.hp = Math.min(game.maxHp, 2);
+          game.activeScrolls = [];
+          sfx.levelUp();
+          spawnExplosion(canvas.width * 0.16, canvas.height * 0.62, ['#ffe14a', '#ff9e4a', '#ff2e97'], 40);
+          game.popups.push({ x: canvas.width / 2, y: canvas.height * 0.35, text: '🔥 PHOENIX REVIVE!', color: '#ffe14a', life: 1.6 });
+          updateHud();
+          return;
+        }
+
+        // Permadeath
+        game.running = false;
+        persist();
+        sfx.gameOver();
+        setMusicLevel(MUSIC_LEVEL_OVER);
+        document.getElementById('gameOverTitle').textContent = 'NINJA FALLEN';
+        document.getElementById('gameOverStats').innerHTML =
+          `Reached <strong style="color:var(--purple);">Floor ${game.floor}</strong> (Best: Floor ${game.bestFloor})<br>` +
+          `Run Score: <strong style="color:var(--yellow);">${game.score}</strong> (All-Time Best: ${game.best})<br>` +
+          `Permanent Word Book: <strong style="color:var(--green);">${game.masteredList.length} / 83 words</strong>`;
+        document.getElementById('gameOverModal').style.display = 'flex';
+      }
+    }
+
+    /* ========================================================================
+       7. MORPHEME DEFINITION CHALLENGE (STEPS 2 & 3)
+       ======================================================================== */
+    function beginDefinitionChallenge(entry, cleanCut) {
+      game.inDefinitionPhase = true;
+      setMusicLevel(MUSIC_LEVEL_DEFINE);
+      const sliceBonus = (cleanCut ? 50 : 20) + (hasRelic('laser') ? 40 : 0);
+      game.score += sliceBonus;
+      updateHud();
+
+      game.challenge = {
+        entry,
+        cleanCut,
+        partIndex: 0,
+        solvedMeanings: Array(entry.parts.length).fill(null),
+        stage: 'parts'
+      };
+
+      const badge = document.getElementById('sliceAccuracyBadge');
+      badge.textContent = cleanCut ? `PERFECT CUT +${sliceBonus}` : `SPLIT +${sliceBonus}`;
+      badge.style.color = cleanCut ? 'var(--green)' : 'var(--yellow)';
+
+      document.getElementById('definitionOverlay').style.display = 'flex';
+      renderDefinitionStep();
+    }
+
+    function renderDefinitionStep() {
+      const ch = game.challenge;
+      const entry = ch.entry;
+
+      const partsRow = document.getElementById('slicedPartsRow');
+      partsRow.innerHTML = '';
+      entry.parts.forEach((p, idx) => {
+        if (idx > 0) {
+          const plus = document.createElement('span');
+          plus.className = 'plus-sign';
+          plus.textContent = '+';
+          partsRow.appendChild(plus);
+        }
+        const isCurrent = ch.stage === 'parts' && ch.partIndex === idx;
+        const isSolved = ch.solvedMeanings[idx] !== null;
+        const slab = document.createElement('div');
+        slab.className = `morpheme-slab ${isCurrent ? 'active-part' : ''} ${isSolved ? 'solved-part' : ''}`;
+        slab.innerHTML = `<div class="slab-role">${p.role}</div><div class="slab-text">${p.text}</div><div class="slab-meaning">${isSolved ? `"${ch.solvedMeanings[idx]}"` : '?'}</div>`;
+        partsRow.appendChild(slab);
+      });
+
+      const titleEl = document.getElementById('defStepTitle');
+      const promptEl = document.getElementById('defQuestionPrompt');
+      const gridEl = document.getElementById('defChoicesGrid');
+      gridEl.innerHTML = '';
+
+      if (ch.stage === 'parts') {
+        const currentPart = entry.parts[ch.partIndex];
+        titleEl.textContent = `PART ${ch.partIndex + 1} OF ${entry.parts.length}`;
+        promptEl.innerHTML = `What does the ${currentPart.role.toLowerCase()} <span>${currentPart.text}</span> mean?`;
+        document.getElementById('senseiBanner').innerHTML = `Step 2: What does <strong>${currentPart.text}</strong> mean?`;
+
+        buildPartOptions(currentPart.meaning).forEach(optText => {
+          const btn = document.createElement('button');
+          btn.className = 'choice-btn';
+          btn.textContent = optText;
+          btn.onclick = () => handlePartAnswer(btn, optText === currentPart.meaning);
+          gridEl.appendChild(btn);
+        });
+      } else {
+        titleEl.textContent = `FINAL STEP`;
+        promptEl.innerHTML = `Put the parts together. What does <span>${entry.word}</span> mean?`;
+        document.getElementById('senseiBanner').innerHTML = `Step 3: What does <strong>${entry.word}</strong> mean?`;
+
+        shuffle([entry.fullMeaning, ...entry.distractorFull]).forEach(optText => {
+          const btn = document.createElement('button');
+          btn.className = 'choice-btn';
+          btn.textContent = optText;
+          btn.onclick = () => handleFullWordAnswer(btn, optText === entry.fullMeaning);
+          gridEl.appendChild(btn);
+        });
+      }
+    }
+
+    function buildPartOptions(correctMeaning) {
+      const pool = new Set([correctMeaning]);
+      const candidateMeanings = [];
+      getPoolForSet('all').forEach(e => e.parts.forEach(p => { if (p.meaning !== correctMeaning) candidateMeanings.push(p.meaning); }));
+      EXTRA_MEANING_DISTRACTORS.forEach(m => { if (m !== correctMeaning) candidateMeanings.push(m); });
+      for (const m of shuffle(candidateMeanings)) {
+        if (pool.size >= 4) break;
+        pool.add(m);
+      }
+      return shuffle(Array.from(pool));
+    }
+
+    function handlePartAnswer(btnEl, isCorrect) {
+      if (!isCorrect) {
+        btnEl.classList.add('wrong');
+        btnEl.disabled = true;
+        sfx.wrong();
+        game.score = Math.max(0, game.score - 10);
+        updateHud();
+        return;
+      }
+      btnEl.classList.add('correct');
+      sfx.partCorrect();
+      const ch = game.challenge;
+      ch.solvedMeanings[ch.partIndex] = ch.entry.parts[ch.partIndex].meaning;
+      game.score += 30;
+      updateHud();
+
+      setTimeout(() => {
+        if (ch.partIndex + 1 < ch.entry.parts.length) ch.partIndex++;
+        else ch.stage = 'full';
+        renderDefinitionStep();
+      }, 260);
+    }
+
+    function handleFullWordAnswer(btnEl, isCorrect) {
+      if (!isCorrect) {
+        btnEl.classList.add('wrong');
+        btnEl.disabled = true;
+        sfx.wrong();
+        game.score = Math.max(0, game.score - 15);
+        updateHud();
+        return;
+      }
+      btnEl.classList.add('correct');
+      sfx.wordMastered();
+      const ch = game.challenge;
+      const entry = ch.entry;
+      game.score += 80;
+      game.runWords++;
+
+      if (hasRelic('vampire') && ch.cleanCut && game.hp < game.maxHp) {
+        game.hp++;
+        game.popups.push({ x: canvas.width * 0.16, y: canvas.height * 0.55, text: '🧛 +1 ❤ HP!', color: '#2bffb0', life: 1.2 });
+      }
+
+      if (!game.masteredList.some(m => m.word === entry.word)) {
+        game.masteredList.push(entry);
+      }
+      persist();
+
+      setTimeout(() => {
+        document.getElementById('definitionOverlay').style.display = 'none';
+        game.inDefinitionPhase = false;
+        game.challenge = null;
+        game.spawnCooldown = 0.5;
+        setMusicLevel(MUSIC_LEVEL_PLAY);
+        announcePowerUp();
+        advanceEncounter(false);
+      }, 380);
+    }
+
+    /* ========================================================================
+       8. PHYSICS & SIMULATION
+       ======================================================================== */
+    function spawnExplosion(x, y, colors, count = 18) {
+      for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const spd = 60 + Math.random() * 220;
+        game.particles.push({
+          x, y,
+          vx: Math.cos(a) * spd,
+          vy: Math.sin(a) * spd,
+          r: 3 + Math.random() * 4,
+          color: colors[i % colors.length],
+          life: 0.45 + Math.random() * 0.3
+        });
+      }
+    }
+
+    function updateSimulation(dt) {
+      if (game.ninja.slashTimer > 0) game.ninja.slashTimer = Math.max(0, game.ninja.slashTimer - dt);
+      if (game.ninja.hurtTimer > 0) game.ninja.hurtTimer = Math.max(0, game.ninja.hurtTimer - dt);
+      if (game.ninja.shieldPulse > 0) game.ninja.shieldPulse = Math.max(0, game.ninja.shieldPulse - dt);
+
+      for (let i = game.bladeTrail.length - 1; i >= 0; i--) {
+        game.bladeTrail[i].life -= dt;
+        if (game.bladeTrail[i].life <= 0) game.bladeTrail.splice(i, 1);
+      }
+      for (let i = game.particles.length - 1; i >= 0; i--) {
+        const p = game.particles[i];
+        p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 360 * dt; p.life -= dt;
+        if (p.life <= 0) game.particles.splice(i, 1);
+      }
+      for (let i = game.popups.length - 1; i >= 0; i--) {
+        game.popups[i].y -= 35 * dt; game.popups[i].life -= dt;
+        if (game.popups[i].life <= 0) game.popups.splice(i, 1);
+      }
+      for (let i = game.splitHalves.length - 1; i >= 0; i--) {
+        const h = game.splitHalves[i];
+        h.x += h.vx * dt; h.y += h.vy * dt; h.vy += 450 * dt; h.life -= dt;
+        if (h.life <= 0) game.splitHalves.splice(i, 1);
+      }
+
+      if (!game.running || game.inDefinitionPhase) return;
+
+      // 10-Second Blitz Countdown
+      if (game.waveMode === 'BLITZ') {
+        game.blitzTimeLeft -= dt;
+        updateProgressBar();
+        if (game.blitzTimeLeft <= 0) {
+          game.activeScrolls = [];
+          sfx.levelUp();
+          game.popups.push({ x: canvas.width / 2, y: canvas.height * 0.35, text: '⚡ BLITZ COMPLETE!', color: '#ffe14a', life: 1.3 });
+          advanceEncounter(false);
+          return;
+        }
+      }
+
+      if (game.activeScrolls.length === 0) {
+        game.spawnCooldown -= dt;
+        if (game.spawnCooldown <= 0) {
+          launchNextScrollWave();
+          game.spawnCooldown = game.waveMode === 'BLITZ' ? 0.45 : 0.95;
+        }
+      }
+
+      for (let i = game.activeScrolls.length - 1; i >= 0; i--) {
+        const obj = game.activeScrolls[i];
+        obj.x += obj.vx * dt;
+        obj.y += obj.vy * dt;
+        obj.vy += obj.gravity * dt;
+        obj.angle += obj.vAngle * dt;
+
+        // Chrono Blade slow-motion hang near apex
+        if (hasRelic('chrono') && Math.abs(obj.vy) < 95) {
+          obj.vy -= obj.gravity * dt * 0.45;
+        }
+
+        if (obj.y > canvas.height + 85 && obj.vy > 0) {
+          game.activeScrolls.splice(i, 1);
+          // In Blitz mode or Target mode (for decoy), letting words fall does not cost HP
+          if (game.waveMode !== 'BLITZ') {
+            if (obj.kind === 'boss') {
+              damageNinja(`Missed Boss Word "${obj.entry.word}"!`);
+            } else if (obj.kind === 'word' && !obj.isWrongTarget) {
+              damageNinja(`Missed "${obj.entry.word}"! Swipe before it drops.`);
+            }
+          }
+        }
+      }
+    }
+
+    /* ========================================================================
+       9. RENDERER: NEON VICE CITY & ANIMATED CYBER-NINJA
+       ======================================================================== */
+    let sceneW = 0, sceneH = 0, stars = [], skyline = [];
+
+    function buildScene() {
+      sceneW = canvas.width; sceneH = canvas.height;
+      stars = [];
+      for (let i = 0; i < 70; i++) stars.push({ x: Math.random(), y: Math.random() * 0.5, r: Math.random() < 0.2 ? 2 : 1, ph: Math.random() * 6.28 });
+      skyline = [];
+      let x = 0;
+      while (x < sceneW) {
+        const bw = 26 + Math.random() * 46;
+        const bh = sceneH * (0.06 + Math.random() * 0.17);
+        const wins = [];
+        for (let wy = 8; wy < bh - 6; wy += 10) for (let wx = 5; wx < bw - 5; wx += 9) if (Math.random() < 0.22) wins.push({ wx, wy, c: Math.random() < 0.5 ? '#ff2e97' : '#00e5ff' });
+        skyline.push({ x, w: bw, h: bh, wins });
+        x += bw + 2;
+      }
+    }
+
+    function drawPalm(x, baseY, height, dir) {
+      const topX = x + dir * height * 0.28;
+      const topY = baseY - height;
+      ctx.strokeStyle = '#08011a';
+      ctx.lineCap = 'round';
+      ctx.lineWidth = Math.max(6, height * 0.045);
+      ctx.beginPath();
+      ctx.moveTo(x, baseY);
+      ctx.quadraticCurveTo(x + dir * height * 0.02, baseY - height * 0.55, topX, topY);
+      ctx.stroke();
+      ctx.lineWidth = Math.max(4, height * 0.03);
+      for (let i = 0; i < 7; i++) {
+        const a = -Math.PI * (0.05 + i / 6 * 0.9);
+        const len = height * 0.36;
+        ctx.beginPath();
+        ctx.moveTo(topX, topY);
+        ctx.quadraticCurveTo(topX + Math.cos(a) * len * 0.6, topY + Math.sin(a) * len * 0.8 - len * 0.15, topX + Math.cos(a) * len, topY + Math.sin(a) * len * 0.5 + len * 0.35);
+        ctx.stroke();
+      }
+    }
+
+    function drawCyberNinja(ts) {
+      const w = canvas.width, h = canvas.height;
+      const roofY = h - 18;
+      const nx = Math.max(76, w * 0.13);
+      const breathe = Math.sin(ts / 260) * 3;
+      const jumpY = game.ninja.slashTimer > 0 ? -Math.sin((game.ninja.slashTimer / 0.28) * Math.PI) * 28 : 0;
+      const ny = roofY - 46 + breathe + jumpY;
+
+      ctx.save();
+      // Foreground Rooftop Ledge
+      ctx.fillStyle = '#0c0324';
+      ctx.strokeStyle = '#00e5ff';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#00e5ff';
+      ctx.shadowBlur = 12;
+      ctx.fillRect(0, roofY, w * 0.28, 22);
+      ctx.beginPath();
+      ctx.moveTo(0, roofY);
+      ctx.lineTo(w * 0.28, roofY);
+      ctx.lineTo(w * 0.31, h);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Hurt flash tint
+      if (game.ninja.hurtTimer > 0 && Math.floor(ts / 50) % 2 === 0) {
+        ctx.globalAlpha = 0.55;
+      }
+
+      // Flowing Neon Scarf
+      const scarfWave = Math.sin(ts / 140) * 8;
+      ctx.strokeStyle = '#ff2e97';
+      ctx.shadowColor = '#ff2e97';
+      ctx.shadowBlur = 14;
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(nx - 6, ny - 6);
+      ctx.quadraticCurveTo(nx - 26, ny - 14 + scarfWave, nx - 44, ny - 4 - scarfWave);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Ninja Torso & Legs
+      ctx.fillStyle = '#150634';
+      ctx.strokeStyle = '#00e5ff';
+      ctx.lineWidth = 2.5;
+      // Legs
+      ctx.beginPath();
+      ctx.moveTo(nx - 8, ny + 14);
+      ctx.lineTo(nx - 14, roofY);
+      ctx.moveTo(nx + 8, ny + 14);
+      ctx.lineTo(nx + 14, roofY);
+      ctx.stroke();
+
+      // Body
+      roundRect(nx - 12, ny - 8, 24, 24, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      // Head & Hood
+      ctx.beginPath();
+      ctx.arc(nx, ny - 20, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Glowing Cyber Visor
+      ctx.fillStyle = game.ninja.hurtTimer > 0 ? '#ff2e97' : '#00e5ff';
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 12;
+      roundRect(nx - 3, ny - 24, 15, 6, 3);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Katana Blade (swings forward during slashTimer)
+      ctx.save();
+      ctx.translate(nx + 10, ny);
+      const bladeAngle = game.ninja.slashTimer > 0
+        ? -0.2 + (1 - game.ninja.slashTimer / 0.28) * 1.6
+        : -0.75 + Math.sin(ts / 300) * 0.06;
+      ctx.rotate(bladeAngle);
+      ctx.strokeStyle = '#ffe14a';
+      ctx.shadowColor = '#ffe14a';
+      ctx.shadowBlur = 16;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(44, -22);
+      ctx.stroke();
+      ctx.restore();
+
+      // Energy Shield Dome
+      if (game.shield > 0 || game.ninja.shieldPulse > 0) {
+        ctx.strokeStyle = 'rgba(0, 229, 255, 0.75)';
+        ctx.fillStyle = 'rgba(0, 229, 255, 0.12)';
+        ctx.shadowColor = '#00e5ff';
+        ctx.shadowBlur = 18;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(nx, ny - 4, 42 + Math.sin(ts / 180) * 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function drawBackground(ts) {
+      const w = canvas.width, h = canvas.height;
+      if (w !== sceneW || h !== sceneH) buildScene();
+      const horizon = h * 0.62;
+
+      const sky = ctx.createLinearGradient(0, 0, 0, horizon);
+      sky.addColorStop(0, '#07011a');
+      sky.addColorStop(0.45, '#2b0a62');
+      sky.addColorStop(0.8, '#b3167a');
+      sky.addColorStop(1, '#ff7a3d');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, w, horizon);
+
+      for (const s of stars) {
+        ctx.globalAlpha = 0.4 + 0.6 * Math.abs(Math.sin(ts / 700 + s.ph));
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(s.x * w, s.y * horizon, s.r, s.r);
+      }
+      ctx.globalAlpha = 1;
+
+      const R = Math.min(w, h) * 0.26;
+      const cx = w / 2, cy = horizon - R * 0.5;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(cx - R, cy - R, R * 2, R);
+      for (let j = 0; j < 6; j++) {
+        const gap = 2 + j * 2.2;
+        const y0 = cy + j * (R / 5.2);
+        ctx.rect(cx - R, y0, R * 2, Math.max(2, R / 5.2 - gap));
+      }
+      ctx.clip();
+      const sun = ctx.createLinearGradient(0, cy - R, 0, cy + R);
+      sun.addColorStop(0, '#ffe14a');
+      sun.addColorStop(0.5, '#ff9e4a');
+      sun.addColorStop(1, '#ff2e97');
+      ctx.fillStyle = sun;
+      ctx.shadowColor = '#ff2e97';
+      ctx.shadowBlur = 40;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      for (const b of skyline) {
+        ctx.fillStyle = '#10033a';
+        ctx.fillRect(b.x, horizon - b.h, b.w, b.h);
+        for (const win of b.wins) {
+          ctx.fillStyle = win.c;
+          ctx.globalAlpha = 0.85;
+          ctx.fillRect(b.x + win.wx, horizon - b.h + win.wy, 3, 4);
+        }
+        ctx.globalAlpha = 1;
+      }
+
+      drawPalm(w * 0.07, horizon + 6, h * 0.5, 1);
+      drawPalm(w * 0.94, horizon + 6, h * 0.44, -1);
+
+      const ground = ctx.createLinearGradient(0, horizon, 0, h);
+      ground.addColorStop(0, '#2a0866');
+      ground.addColorStop(1, '#07011a');
+      ctx.fillStyle = ground;
+      ctx.fillRect(0, horizon, w, h - horizon);
+
+      ctx.save();
+      ctx.shadowColor = '#ff2e97';
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = 'rgba(255, 46, 151, 0.75)';
+      ctx.lineWidth = 1.5;
+      const rows = 10;
+      const off = (ts / 1600) % 1;
+      for (let i = 0; i < rows; i++) {
+        const t = (i + off) / rows;
+        const y = horizon + (h - horizon) * t * t;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(0, 229, 255, 0.6)';
+      ctx.shadowColor = '#00e5ff';
+      for (let k = -14; k <= 14; k++) {
+        ctx.beginPath();
+        ctx.moveTo(w / 2 + k * (w * 0.012), horizon);
+        ctx.lineTo(w / 2 + k * (w * 0.16), h);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      ctx.save();
+      ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 16;
+      ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0, horizon); ctx.lineTo(w, horizon); ctx.stroke();
+      ctx.restore();
+
+      drawCyberNinja(ts);
+    }
+
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function drawGlowText(text, x, y, font, fill, glow, blur = 14) {
+      ctx.font = font;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = glow;
+      ctx.shadowBlur = blur;
+      ctx.fillStyle = fill;
+      ctx.fillText(text, x, y);
+      ctx.shadowBlur = 0;
+    }
+
+    function renderFrame(ts) {
+      const vp = document.getElementById('dojoArena').getBoundingClientRect();
+      if (canvas.width !== Math.floor(vp.width) || canvas.height !== Math.floor(vp.height)) {
+        canvas.width = Math.max(320, Math.floor(vp.width));
+        canvas.height = Math.max(240, Math.floor(vp.height));
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground(ts);
+
+      for (const obj of game.activeScrolls) {
+        ctx.save();
+        ctx.translate(obj.x, obj.y);
+        ctx.rotate(obj.angle);
+
+        if (obj.kind === 'root_orb') {
+          // Golden Root Orb
+          ctx.fillStyle = '#241404';
+          ctx.strokeStyle = '#ffe14a';
+          ctx.lineWidth = 4;
+          ctx.shadowColor = '#ffe14a';
+          ctx.shadowBlur = 24;
+          ctx.beginPath();
+          ctx.arc(0, 0, obj.r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+          drawGlowText(obj.rootData.root, 0, -3, '700 18px "Fredoka", sans-serif', '#ffe14a', '#ff9e4a', 10);
+          drawGlowText('ROOT', 0, 14, '8px "Press Start 2P", monospace', '#2bffb0', '#2bffb0', 6);
+        } else if (obj.kind === 'boss') {
+          // Armored 3-Morpheme Boss Word
+          ctx.fillStyle = '#1d0426';
+          ctx.strokeStyle = '#ffe14a';
+          ctx.lineWidth = 5;
+          ctx.shadowColor = '#ff2e97';
+          ctx.shadowBlur = 28;
+          roundRect(-obj.w / 2, -obj.h / 2, obj.w, obj.h, 14);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          // Draw both cut seams
+          for (const seam of obj.seams) {
+            const sx = -obj.w / 2 + obj.w * seam.ratio;
+            ctx.save();
+            ctx.strokeStyle = seam.cut ? '#2bffb0' : '#00e5ff';
+            ctx.shadowColor = ctx.strokeStyle;
+            ctx.shadowBlur = 14;
+            ctx.lineWidth = seam.cut ? 4 : 3;
+            if (!seam.cut) ctx.setLineDash([6, 5]);
+            ctx.beginPath();
+            ctx.moveTo(sx, -obj.h / 2 - 12);
+            ctx.lineTo(sx, obj.h / 2 + 12);
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          drawGlowText(obj.entry.word, 0, 2, '700 31px "Fredoka", sans-serif', '#ffe14a', '#ff2e97', 14);
+          drawGlowText('BOSS • 2 SEAMS', 0, -obj.h / 2 - 14, '9px "Press Start 2P", monospace', '#ffe14a', '#ff2e97', 8);
+        } else {
+          // Standard Neon Word Card (used by BOTH true words and Disguised Traps!)
+          ctx.fillStyle = '#12052e';
+          ctx.strokeStyle = '#ff2e97';
+          ctx.lineWidth = 4;
+          ctx.shadowColor = '#ff2e97';
+          ctx.shadowBlur = 22;
+          roundRect(-obj.w / 2, -obj.h / 2, obj.w, obj.h, 12);
+          ctx.fill();
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+
+          ctx.strokeStyle = 'rgba(0, 229, 255, 0.55)';
+          ctx.lineWidth = 1.5;
+          roundRect(-obj.w / 2 + 6, -obj.h / 2 + 6, obj.w - 12, obj.h - 12, 8);
+          ctx.stroke();
+
+          // Cyan cut line
+          const seamX = -obj.w / 2 + obj.w * obj.seamRatio;
+          ctx.save();
+          ctx.strokeStyle = '#00e5ff';
+          ctx.shadowColor = '#00e5ff';
+          ctx.shadowBlur = 14;
+          ctx.lineWidth = 3;
+          ctx.setLineDash([6, 5]);
+          ctx.beginPath();
+          ctx.moveTo(seamX, -obj.h / 2 - 10);
+          ctx.lineTo(seamX, obj.h / 2 + 10);
+          ctx.stroke();
+          ctx.restore();
+
+          const wordText = obj.kind === 'trap' ? obj.label : obj.entry.word;
+          drawGlowText(wordText, 0, 2, '700 29px "Fredoka", sans-serif', '#ffffff', '#ff2e97', 12);
+
+          // Sensei's 3rd Eye Relic reveals disguised traps!
+          if (obj.kind === 'trap' && hasRelic('thirdeye')) {
+            drawGlowText('👁️ TRAP', 0, -obj.h / 2 - 12, '8px "Press Start 2P", monospace', '#ff9e4a', '#ff2e97', 8);
+          }
+        }
+        ctx.restore();
+      }
+
+      // Sliced halves
+      for (const hlf of game.splitHalves) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, hlf.life / 0.7);
+        ctx.translate(hlf.x, hlf.y);
+        ctx.rotate(hlf.angle);
+        ctx.fillStyle = '#12052e';
+        ctx.strokeStyle = '#00e5ff';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = '#00e5ff';
+        ctx.shadowBlur = 14;
+        roundRect(-52, -26, 104, 52, 10);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        drawGlowText(hlf.text, 0, 1, '700 22px "Fredoka", sans-serif', '#ffffff', '#00e5ff', 8);
+        ctx.restore();
+      }
+
+      // Particles
+      for (const p of game.particles) {
+        ctx.globalAlpha = Math.min(1, p.life * 2.2);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x - p.r / 2, p.y - p.r / 2, p.r, p.r);
+      }
+      ctx.globalAlpha = 1;
+
+      // Popups
+      for (const pop of game.popups) {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, pop.life * 2);
+        drawGlowText(pop.text, pop.x, pop.y, '11px "Press Start 2P", monospace', pop.color, pop.color, 12);
+        ctx.restore();
+      }
+
+      // Blade trail
+      if (game.bladeTrail.length > 1) {
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        for (let i = 1; i < game.bladeTrail.length; i++) {
+          const prev = game.bladeTrail[i - 1];
+          const curr = game.bladeTrail[i];
+          const alpha = Math.max(0, curr.life / 0.22);
+          const mix = i / game.bladeTrail.length;
+          const r = Math.round(0 + 255 * mix), g = Math.round(229 - 183 * mix), b = Math.round(255 - 104 * mix);
+          ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+          ctx.shadowColor = `rgb(${r}, ${g}, ${b})`;
+          ctx.shadowBlur = 16;
+          ctx.lineWidth = 11 * alpha;
+          ctx.beginPath();
+          ctx.moveTo(prev.x, prev.y);
+          ctx.lineTo(curr.x, curr.y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+
+    /* ========================================================================
+       10. MAIN LOOP
+       ======================================================================== */
+    let lastTs = 0;
+    function gameLoop(ts) {
+      const dt = Math.min(0.05, (ts - lastTs) / 1000 || 0.016);
+      lastTs = ts;
+      updateSimulation(dt);
+      renderFrame(ts);
+      requestAnimationFrame(gameLoop);
+    }
+
+    window.onload = function () {
+      loadSave();
+      updateHud();
+      requestAnimationFrame(gameLoop);
+    };
+  </script>
+</body>
+</html>
